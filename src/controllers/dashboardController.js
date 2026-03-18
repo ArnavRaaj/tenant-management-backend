@@ -17,9 +17,20 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     { $sort: { '_id.year': 1, '_id.month': 1 } }
   ]);
 
-  // Aggregate rent by floor
-  // Requires a lookup to the Flat collection to get the floor number
+  // Aggregate rent by floor filter out everything not in selected month
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+  const currentYearNum = new Date().getFullYear();
+
+  const filterMonth = req.query.month || currentMonthName;
+  const filterYear = req.query.year ? parseInt(req.query.year) : currentYearNum;
+
   const floorRent = await RentHistory.aggregate([
+    {
+      $match: {
+        rentMonth: filterMonth,
+        rentYear: filterYear
+      }
+    },
     {
       $lookup: {
         from: 'flats',

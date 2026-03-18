@@ -6,13 +6,15 @@ const TenantSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a name']
     },
+    contactNumber: {
+      type: String,
+      required: [true, 'Please add a contact number']
+    },
     age: {
       type: Number,
-      required: [true, 'Please add age']
     },
     aadharNumber: {
       type: String,
-      required: [true, 'Please add Aadhar number']
     },
     aadharImage: {
       type: String, // URL from Cloudinary
@@ -20,11 +22,10 @@ const TenantSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      required: [true, 'Please add address']
     },
     occupantsCount: {
       type: Number,
-      required: [true, 'Please add number of occupants']
+      default: 1
     },
     securityDeposit: {
       type: Number,
@@ -41,6 +42,10 @@ const TenantSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true // Set to false when tenant leaves
+    },
+    dateOfRenting: {
+      type: Date,
+      default: Date.now
     },
     flat: {
       type: mongoose.Schema.ObjectId,

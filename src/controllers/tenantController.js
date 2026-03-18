@@ -31,8 +31,8 @@ exports.getTenant = asyncHandler(async (req, res) => {
 // @access  Private
 exports.createTenant = asyncHandler(async (req, res) => {
   const {
-    name, age, aadharNumber, address, occupantsCount,
-    securityDeposit, monthlyRent, pendingBalance, flatId
+    name, contactNumber, age, aadharNumber, address, occupantsCount,
+    securityDeposit, monthlyRent, pendingBalance, flatId, dateOfRenting
   } = req.body;
 
   // Validate flat
@@ -63,6 +63,7 @@ exports.createTenant = asyncHandler(async (req, res) => {
 
   const tenant = await Tenant.create({
     name,
+    contactNumber,
     age,
     aadharNumber,
     aadharImage: imageUrl,
@@ -72,7 +73,8 @@ exports.createTenant = asyncHandler(async (req, res) => {
     monthlyRent,
     pendingBalance: pendingBalance || 0,
     flat: flatId,
-    isActive: true
+    isActive: true,
+    dateOfRenting: dateOfRenting || Date.now()
   });
 
   // Update flat with new tenant
