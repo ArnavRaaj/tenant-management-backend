@@ -1,14 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const TenantSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Please add a name']
+      required: [true, "Please add a name"],
     },
     contactNumber: {
       type: String,
-      required: [true, 'Please add a contact number']
+      required: [true, "Please add a contact number"],
     },
     age: {
       type: Number,
@@ -17,49 +17,49 @@ const TenantSchema = new mongoose.Schema(
       type: String,
     },
     aadharImage: {
-      type: String, // URL from Cloudinary
-      default: ''
+      type: String,
+      default: "",
     },
     address: {
       type: String,
     },
     occupantsCount: {
       type: Number,
-      default: 1
+      default: 1,
     },
     securityDeposit: {
       type: Number,
-      required: [true, 'Please add security deposit amount']
+      required: [true, "Please add security deposit amount"],
     },
     monthlyRent: {
       type: Number,
-      required: [true, 'Please add monthly rent amount']
+      required: [true, "Please add monthly rent amount"],
     },
     pendingBalance: {
       type: Number,
-      default: 0
+      default: 0,
     },
     isActive: {
       type: Boolean,
-      default: true // Set to false when tenant leaves
+      default: true,
     },
     vacatedDate: {
       type: Date,
-      default: null // Set when tenant vacates or is changed out
+      default: null,
     },
     dateOfRenting: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
     flat: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Flat',
-      required: true
-    }
+      ref: "Flat",
+      required: true,
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
-module.exports = mongoose.model('Tenant', TenantSchema);
+module.exports = mongoose.model("Tenant", TenantSchema);
