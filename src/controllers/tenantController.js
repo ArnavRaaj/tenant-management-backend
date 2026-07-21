@@ -8,7 +8,16 @@ const { uploadImage } = require('../utils/cloudinary');
 // @route   GET /api/tenants
 // @access  Private
 exports.getTenants = asyncHandler(async (req, res) => {
-  const tenants = await Tenant.find({ isActive: true }).populate('flat', 'flatNumber floor');
+  const filter = {};
+
+  // ?status=past  → inactive tenants; default → active only
+  if (req.query.status === 'past') filter.isActive = false;
+  else filter.isActive = true;
+
+  // ?rentDue=true → only tenants with a pending balance (only meaningful for active)
+  if (req.query.rentDue === 'true') filter.pendingBalance = { $gt: 0 };
+
+  const tenants = await Tenant.find(filter).populate('flat', 'flatNumber floor');
   res.status(200).json(tenants);
 });
 
@@ -130,8 +139,9 @@ exports.changeTenant = asyncHandler(async (req, res) => {
   const flatId = currentTenant.flat;
   const flat = await Flat.findById(flatId);
 
-  // Mark current tenant as inactive
+  // Mark current tenant as inactive and record vacated date
   currentTenant.isActive = false;
+  currentTenant.vacatedDate = Date.now();
   await currentTenant.save();
 
   // Clear flat's current tenant reference temporarily to reuse createTenant logic

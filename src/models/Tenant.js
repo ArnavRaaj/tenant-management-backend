@@ -43,6 +43,10 @@ const TenantSchema = new mongoose.Schema(
       type: Boolean,
       default: true // Set to false when tenant leaves
     },
+    vacatedDate: {
+      type: Date,
+      default: null // Set when tenant vacates or is changed out
+    },
     dateOfRenting: {
       type: Date,
       default: Date.now

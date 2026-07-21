@@ -1,14 +1,18 @@
+const mongoose = require('mongoose');
 const Flat = require('../models/Flat');
+const Tenant = require('../models/Tenant');
+const RentHistory = require('../models/RentHistory');
 const { asyncHandler } = require('../utils/helpers');
 
-// @desc    Get all flats (grouped by floor or simple list)
+// @desc    Get all flats — supports ?status=vacant|occupied
 // @route   GET /api/flats
 // @access  Private
 exports.getFlats = asyncHandler(async (req, res) => {
-  const flats = await Flat.find().populate('currentTenant');
-  
-  // Optionally group them by floor for the frontend if helpful, 
-  // but usually better to let frontend group. We'll just return all.
+  const filter = {};
+  if (req.query.status === 'vacant') filter.currentTenant = null;
+  if (req.query.status === 'occupied') filter.currentTenant = { $ne: null };
+
+  const flats = await Flat.find(filter).populate('currentTenant');
   res.status(200).json(flats);
 });
 
@@ -26,7 +30,7 @@ exports.getFlat = asyncHandler(async (req, res) => {
   res.status(200).json(flat);
 });
 
-// @desc    Create a flat (Initial Setup)
+// @desc    Create a flat (floor-wise)
 // @route   POST /api/flats
 // @access  Private
 exports.createFlat = asyncHandler(async (req, res) => {
@@ -38,12 +42,129 @@ exports.createFlat = asyncHandler(async (req, res) => {
     return;
   }
 
-  const flat = await Flat.create({
-    flatNumber,
-    floor
-  });
-
+  const flat = await Flat.create({ flatNumber, floor });
   res.status(201).json(flat);
+});
+
+// @desc    Delete a flat (only if unoccupied)
+// @route   DELETE /api/flats/:id
+// @access  Private
+exports.deleteFlat = asyncHandler(async (req, res) => {
+  const flat = await Flat.findById(req.params.id);
+
+  if (!flat) {
+    res.status(404).json({ message: 'Flat not found' });
+    return;
+  }
+
+  if (flat.currentTenant) {
+    res.status(400).json({ message: 'Cannot delete an occupied flat. Vacate the tenant first.' });
+    return;
+  }
+
+  await flat.deleteOne();
+  res.status(200).json({ message: 'Flat deleted successfully' });
+});
+
+// @desc    Get all tenants (past + current) who ever lived in this flat
+// @route   GET /api/flats/:id/tenants
+// @access  Private
+exports.getFlatTenantHistory = asyncHandler(async (req, res) => {
+  const flat = await Flat.findById(req.params.id);
+  if (!flat) {
+    res.status(404).json({ message: 'Flat not found' });
+    return;
+  }
+
+  const tenants = await Tenant.find({ flat: req.params.id })
+    .sort({ dateOfRenting: -1 })
+    .select('name contactNumber dateOfRenting vacatedDate isActive monthlyRent securityDeposit pendingBalance');
+
+  res.status(200).json(tenants);
+});
+
+// @desc    Get total revenue + monthly breakdown for a flat
+// @route   GET /api/flats/:id/revenue
+// @access  Private
+exports.getFlatRevenue = asyncHandler(async (req, res) => {
+  const flat = await Flat.findById(req.params.id);
+  if (!flat) {
+    res.status(404).json({ message: 'Flat not found' });
+    return;
+  }
+
+  const monthlyBreakdown = await RentHistory.aggregate([
+    { $match: { flat: new mongoose.Types.ObjectId(req.params.id) } },
+    {
+      $group: {
+        _id: { month: '$rentMonth', year: '$rentYear' },
+        totalPaid: { $sum: '$amountPaid' }
+      }
+    },
+    { $sort: { '_id.year': 1, '_id.month': 1 } }
+  ]);
+
+  const grandTotal = monthlyBreakdown.reduce((sum, m) => sum + m.totalPaid, 0);
+
+  const formatted = monthlyBreakdown.map(m => ({
+    monthStr: `${m._id.month} ${m._id.year}`,
+    month: m._id.month,
+    year: m._id.year,
+    totalPaid: m.totalPaid
+  }));
+
+  res.status(200).json({ grandTotal, monthlyBreakdown: formatted });
+});
+
+// @desc    Get vacancy periods for a flat (gaps between tenants)
+// @route   GET /api/flats/:id/vacant-history
+// @access  Private
+exports.getFlatVacantHistory = asyncHandler(async (req, res) => {
+  const flat = await Flat.findById(req.params.id);
+  if (!flat) {
+    res.status(404).json({ message: 'Flat not found' });
+    return;
+  }
+
+  // All tenants for this flat sorted oldest first
+  const tenants = await Tenant.find({ flat: req.params.id })
+    .sort({ dateOfRenting: 1 })
+    .select('name dateOfRenting vacatedDate isActive');
+
+  const vacancyPeriods = [];
+
+  for (let i = 0; i < tenants.length - 1; i++) {
+    const current = tenants[i];
+    const next = tenants[i + 1];
+
+    // Gap exists if the current tenant has a vacated date before the next tenant moved in
+    const vacatedAt = current.vacatedDate;
+    const nextMovedIn = next.dateOfRenting;
+
+    if (vacatedAt && nextMovedIn && vacatedAt < nextMovedIn) {
+      vacancyPeriods.push({
+        from: vacatedAt,
+        to: nextMovedIn,
+        prevTenant: current.name,
+        nextTenant: next.name,
+        daysVacant: Math.ceil((new Date(nextMovedIn) - new Date(vacatedAt)) / (1000 * 60 * 60 * 24))
+      });
+    }
+  }
+
+  // If the flat is currently vacant, add the open-ended period
+  const lastTenant = tenants[tenants.length - 1];
+  if (lastTenant && !flat.currentTenant && lastTenant.vacatedDate) {
+    vacancyPeriods.push({
+      from: lastTenant.vacatedDate,
+      to: null, // Currently vacant
+      prevTenant: lastTenant.name,
+      nextTenant: null,
+      daysVacant: Math.ceil((new Date() - new Date(lastTenant.vacatedDate)) / (1000 * 60 * 60 * 24))
+    });
+  }
+
+  res.status(200).json(vacancyPeriods);
 });
 
 // Setup function to initialize the 14 flats quickly
