@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   getFlatRepo,
   getFlatListRepo,
@@ -9,78 +9,71 @@ import {
   getRentHistoryByFlatIdRepo,
   getTenantsByFlatIdAscRepo,
 } from "../repository/flat.repository";
+import { AppError } from "../utils/AppError";
 
-export const getFlatListService = async (req: Request, res: Response) => {
+export const getFlatListService = async (req: Request) => {
   const filter: any = {};
   if (req.query.status === "vacant") filter.currentTenant = null;
   if (req.query.status === "occupied") filter.currentTenant = { $ne: null };
 
   const flats = await getFlatListRepo(filter);
-  res.status(200).json(flats);
+  return flats;
 };
 
-export const getFlatService = async (req: Request, res: Response) => {
+export const getFlatService = async (req: Request) => {
   const flat = await getFlatRepo(req.params.id as string);
 
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
-  res.status(200).json(flat);
+  return flat;
 };
 
-export const createFlatService = async (req: Request, res: Response) => {
+export const createFlatService = async (req: Request) => {
   const { flatNumber, floor } = req.body;
 
   const flatExists = await findOneFlatByNumberRepo(flatNumber);
   if (flatExists) {
-    res.status(400).json({ message: "Flat already exists" });
-    return;
+    throw new AppError("Flat already exists", 400);
   }
 
   const flat = await createFlatRepo(flatNumber, floor);
-  res.status(201).json(flat);
+  return flat;
 };
 
-export const deleteFlatService = async (req: Request, res: Response) => {
+export const deleteFlatService = async (req: Request) => {
   const flat = await getFlatRepo(req.params.id as string);
 
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
   if (flat.currentTenant) {
-    res.status(400).json({
-      message: "Cannot delete an occupied flat. Vacate the tenant first.",
-    });
-    return;
+    throw new AppError(
+      "Cannot delete an occupied flat. Vacate the tenant first.",
+      400,
+    );
   }
 
   await deleteFlatRepo(flat);
-  res.status(200).json({ message: "Flat deleted successfully" });
+  return { message: "Flat deleted successfully" };
 };
 
-export const getFlatTenantHistoryService = async (
-  req: Request,
-  res: Response,
-) => {
+export const getFlatTenantHistoryService = async (req: Request) => {
   const flat = await getFlatRepo(req.params.id as string);
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
   const tenants = await getTenantsByFlatIdRepo(req.params.id as string);
-  res.status(200).json(tenants);
+  return tenants;
 };
 
-export const getFlatRevenueService = async (req: Request, res: Response) => {
+export const getFlatRevenueService = async (req: Request) => {
   const flat = await getFlatRepo(req.params.id as string);
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
   const monthlyBreakdown = await getRentHistoryByFlatIdRepo(
@@ -99,17 +92,13 @@ export const getFlatRevenueService = async (req: Request, res: Response) => {
     totalPaid: m.totalPaid,
   }));
 
-  res.status(200).json({ grandTotal, monthlyBreakdown: formatted });
+  return { grandTotal, monthlyBreakdown: formatted };
 };
 
-export const getFlatVacantHistoryService = async (
-  req: Request,
-  res: Response,
-) => {
+export const getFlatVacantHistoryService = async (req: Request) => {
   const flat = await getFlatRepo(req.params.id as string);
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
   const tenants = await getTenantsByFlatIdAscRepo(req.params.id as string);
@@ -150,5 +139,5 @@ export const getFlatVacantHistoryService = async (
     });
   }
 
-  res.status(200).json(vacancyPeriods);
+  return vacancyPeriods;
 };

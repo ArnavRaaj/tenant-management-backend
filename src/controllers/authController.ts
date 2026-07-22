@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   getMeService,
   loginUserService,
@@ -8,18 +8,18 @@ const { asyncHandler } = require("../utils/helpers");
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
-exports.registerUser = asyncHandler(async (req: Request, res: Response) => {
-  return await registerUserService(req, res);
+exports.registerUser = asyncHandler(async (req: Request) => {
+  return await registerUserService(req);
 });
 
 // @desc    Authenticate a user
 // @route   POST /api/auth/login
-exports.loginUser = asyncHandler(async (req: Request, res: Response) => {
-  return await loginUserService(req, res);
+exports.loginUser = asyncHandler(async (req: Request) => {
+  return await loginUserService(req);
 });
 
 // @desc    Get user data
 // @route   GET /api/auth/me
-exports.getMe = asyncHandler(async (req: any, res: Response) => {
-  return await getMeService(req, res);
+exports.getMe = asyncHandler(async (req: any) => {
+  return await getMeService(req);
 });

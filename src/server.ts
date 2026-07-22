@@ -1,4 +1,6 @@
 import express, { Request, Response } from "express";
+import { responseMiddleware } from "./middlewares/responseMiddleware";
+import { errorMiddleware } from "./middlewares/errorMiddleware";
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -12,6 +14,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.disable("etag"); // Disable ETags to prevent 304 Not Modified responses
 
 // Middleware
 app.use(express.json());
@@ -29,6 +32,10 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 app.get("/", (req: Request, res: Response) => {
   res.send("Tenant Management API is running...");
 });
+
+// Post-route Middlewares
+app.use(responseMiddleware);
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,58 +1,57 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   createUser,
   findOneUserByEmail,
   findUserByEmail,
 } from "../repository/user.repository";
+import { AppError } from "../utils/AppError";
 
 const { generateToken } = require("../utils/helpers");
 
-export const registerUserService = async (req: Request, res: Response) => {
+export const registerUserService = async (req: Request) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
-    res.status(400).json({ message: "Please add all fields" });
-    return;
+    throw new AppError("Please add all fields", 400);
   }
 
   const userExists = await findUserByEmail(email);
 
   if (userExists) {
-    res.status(400).json({ message: "User already exists" });
-    return;
+    throw new AppError("User already exists", 400);
   }
 
   const user = await createUser(name, email, password);
 
   if (user) {
-    res.status(201).json({
+    return {
       _id: user.id,
       name: user.name,
       email: user.email,
       token: generateToken(user._id),
-    });
+    };
   } else {
-    res.status(400).json({ message: "Invalid user data" });
+    throw new AppError("Invalid user data", 400);
   }
 };
 
-export const loginUserService = async (req: Request, res: Response) => {
+export const loginUserService = async (req: Request) => {
   const { email, password } = req.body;
 
   const user = await findOneUserByEmail(email);
 
   if (user && (await user.matchPassword(password))) {
-    res.json({
+    return {
       _id: user.id,
       name: user.name,
       email: user.email,
       token: generateToken(user._id),
-    });
+    };
   } else {
-    res.status(401).json({ message: "Invalid credentials" });
+    throw new AppError("Invalid credentials", 401);
   }
 };
 
-export const getMeService = async (req: any, res: Response) => {
-  res.status(200).json(req.user);
+export const getMeService = async (req: any) => {
+  return req.user;
 };

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   findTenantsRepo,
   createTenantRepo,
@@ -8,9 +8,10 @@ import {
   findRentHistoryByTenantRepo,
 } from "../repository/tenant.repository";
 import { getFlatRepo } from "../repository/flat.repository";
+import { AppError } from "../utils/AppError";
 const { uploadImage } = require("../utils/cloudinary");
 
-export const getTenantsService = async (req: Request, res: Response) => {
+export const getTenantsService = async (req: Request) => {
   const filter: any = {};
   if (req.query.status === "past") filter.isActive = false;
   else filter.isActive = true;
@@ -18,21 +19,20 @@ export const getTenantsService = async (req: Request, res: Response) => {
   if (req.query.rentDue === "true") filter.pendingBalance = { $gt: 0 };
 
   const tenants = await findTenantsRepo(filter);
-  res.status(200).json(tenants);
+  return tenants;
 };
 
-export const getTenantService = async (req: Request, res: Response) => {
+export const getTenantService = async (req: Request) => {
   const tenant = await findTenantByIdRepo(req.params.id as string);
 
   if (!tenant) {
-    res.status(404).json({ message: "Tenant not found" });
-    return;
+    throw new AppError("Tenant not found", 404);
   }
 
-  res.status(200).json(tenant);
+  return tenant;
 };
 
-export const createTenantService = async (req: any, res: Response) => {
+export const createTenantService = async (req: any) => {
   const {
     name,
     contactNumber,
@@ -49,13 +49,11 @@ export const createTenantService = async (req: any, res: Response) => {
 
   const flat = await getFlatRepo(flatId);
   if (!flat) {
-    res.status(404).json({ message: "Flat not found" });
-    return;
+    throw new AppError("Flat not found", 404);
   }
 
   if (flat.currentTenant) {
-    res.status(400).json({ message: "Flat is already occupied" });
-    return;
+    throw new AppError("Flat is already occupied", 400);
   }
 
   let imageUrl = "";
@@ -65,8 +63,7 @@ export const createTenantService = async (req: any, res: Response) => {
       imageUrl = result.secure_url;
     } catch (error) {
       console.error("Image upload failed", error);
-      res.status(500).json({ message: "Image upload failed" });
-      return;
+      throw new AppError("Image upload failed", 500);
     }
   }
 
@@ -89,14 +86,13 @@ export const createTenantService = async (req: any, res: Response) => {
   flat.currentTenant = tenant._id;
   await flat.save();
 
-  res.status(201).json(tenant);
+  return tenant;
 };
 
-export const updateTenantService = async (req: any, res: Response) => {
+export const updateTenantService = async (req: any) => {
   let tenant = await findTenantByIdRepo(req.params.id as string);
   if (!tenant) {
-    res.status(404).json({ message: "Tenant not found" });
-    return;
+    throw new AppError("Tenant not found", 404);
   }
 
   let imageUrl = tenant.aadharImage;
@@ -106,8 +102,7 @@ export const updateTenantService = async (req: any, res: Response) => {
       imageUrl = result.secure_url;
     } catch (error) {
       console.error("Image upload failed", error);
-      res.status(500).json({ message: "Image upload failed" });
-      return;
+      throw new AppError("Image upload failed", 500);
     }
   }
 
@@ -115,17 +110,15 @@ export const updateTenantService = async (req: any, res: Response) => {
     ...req.body,
     aadharImage: imageUrl,
   });
-  res.status(200).json(tenant);
+  return tenant;
 };
 
-export const changeTenantService = async (req: Request, res: Response) => {
+export const changeTenantService = async (req: Request) => {
   const currentTenant = await findTenantByIdRepo(req.params.id as string);
   if (!currentTenant) {
-    res.status(404).json({ message: "Tenant not found" });
-    return;
+    throw new AppError("Tenant not found", 404);
   }
 
-  // tenant.flat is populated, so it is an object
   const flatId = currentTenant.flat._id;
   const flat = await getFlatRepo(flatId);
 
@@ -137,14 +130,13 @@ export const changeTenantService = async (req: Request, res: Response) => {
   await flat.save();
 
   req.body.flatId = flatId;
-  return await createTenantService(req, res);
+  return await createTenantService(req);
 };
 
-export const addRentRecordService = async (req: Request, res: Response) => {
+export const addRentRecordService = async (req: Request) => {
   const tenant = await findTenantByIdRepo(req.params.id as string);
   if (!tenant) {
-    res.status(404).json({ message: "Tenant not found" });
-    return;
+    throw new AppError("Tenant not found", 404);
   }
 
   const { amountPaid, rentMonth, rentYear, paymentDate } = req.body;
@@ -162,13 +154,10 @@ export const addRentRecordService = async (req: Request, res: Response) => {
   tenant.pendingBalance += difference;
   await tenant.save();
 
-  res.status(201).json(rentRecord);
+  return rentRecord;
 };
 
-export const getRentHistoryForTenantService = async (
-  req: Request,
-  res: Response,
-) => {
+export const getRentHistoryForTenantService = async (req: Request) => {
   const records = await findRentHistoryByTenantRepo(req.params.id as string);
-  res.status(200).json(records);
+  return records;
 };

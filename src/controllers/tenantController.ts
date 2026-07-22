@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   getTenantService,
   getTenantsService,
@@ -12,44 +12,42 @@ const { asyncHandler } = require("../utils/helpers");
 
 // @desc    Get all active tenants
 // @route   GET /api/tenants
-exports.getTenants = asyncHandler(async (req: Request, res: Response) => {
-  return await getTenantsService(req, res);
+exports.getTenants = asyncHandler(async (req: Request) => {
+  return await getTenantsService(req);
 });
 
 // @desc    Get single tenant
 // @route   GET /api/tenants/:id
-exports.getTenant = asyncHandler(async (req: Request, res: Response) => {
-  return await getTenantService(req, res);
+exports.getTenant = asyncHandler(async (req: Request) => {
+  return await getTenantService(req);
 });
 
 // @desc    Assign flat to new tenant
 // @route   POST /api/tenants
-exports.createTenant = asyncHandler(async (req: any, res: Response) => {
-  return await createTenantService(req, res);
+exports.createTenant = asyncHandler(async (req: any) => {
+  return await createTenantService(req);
 });
 
 // @desc    Update tenant details
 // @route   PUT /api/tenants/:id
-exports.updateTenant = asyncHandler(async (req: any, res: Response) => {
-  return await updateTenantService(req, res);
+exports.updateTenant = asyncHandler(async (req: any) => {
+  return await updateTenantService(req);
 });
 
 // @desc    Change tenant (Move out current, assign new)
 // @route   POST /api/tenants/:id/change
-exports.changeTenant = asyncHandler(async (req: Request, res: Response) => {
-  return await changeTenantService(req, res);
+exports.changeTenant = asyncHandler(async (req: Request) => {
+  return await changeTenantService(req);
 });
 
 // @desc    Add a rent payment record
 // @route   POST /api/tenants/:id/rent
-exports.addRentRecord = asyncHandler(async (req: Request, res: Response) => {
-  return await addRentRecordService(req, res);
+exports.addRentRecord = asyncHandler(async (req: Request) => {
+  return await addRentRecordService(req);
 });
 
 // @desc    Get rent history for a tenant
 // @route   GET /api/tenants/:id/rent
-exports.getRentHistoryForTenant = asyncHandler(
-  async (req: Request, res: Response) => {
-    return await getRentHistoryForTenantService(req, res);
-  },
-);
+exports.getRentHistoryForTenant = asyncHandler(async (req: Request) => {
+  return await getRentHistoryForTenantService(req);
+});

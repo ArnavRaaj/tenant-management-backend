@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { Request } from "express";
 import {
   aggregateMonthlyRentRepo,
   aggregateFloorRentRepo,
 } from "../repository/dashboard.repository";
 
-export const getDashboardStatsService = async (req: Request, res: Response) => {
+export const getDashboardStatsService = async (req: Request) => {
   const monthlyRent = await aggregateMonthlyRentRepo();
 
   const currentMonthName = new Date().toLocaleString("default", {
@@ -39,8 +39,8 @@ export const getDashboardStatsService = async (req: Request, res: Response) => {
     totalRent: m.totalRent,
   }));
 
-  res.status(200).json({
+  return {
     monthlyRentBreakdown: formattedMonthlyRent,
     floorRentBreakdown: formattedFloorRent,
-  });
+  };
 };
