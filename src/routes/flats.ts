@@ -10,52 +10,46 @@ const {
   getFlatVacantHistory,
 } = require("../controllers/flatController");
 const { protect } = require("../middlewares/authMiddleware");
-const { body, param, query } = require("express-validator");
 const { validateRequest } = require("../middlewares/validationMiddleware");
+const {
+  getFlatsSchema,
+  createFlatSchema,
+  flatIdParamSchema,
+} = require("../validations/flat.validation");
 
 router
   .route("/")
-  .get(
-    protect,
-    [query("status").optional().isIn(["vacant", "occupied"])],
-    validateRequest,
-    getFlats,
-  ) // supports ?status=vacant|occupied
-  .post(
-    protect,
-    [
-      body("flatNumber").notEmpty().withMessage("Flat number is required"),
-      body("floor").isNumeric().withMessage("Floor must be a number"),
-    ],
-    validateRequest,
-    createFlat,
-  );
+  .get(protect, validateRequest(getFlatsSchema), getFlats) // supports ?status=vacant|occupied
+  .post(protect, validateRequest(createFlatSchema), createFlat);
 router
   .route("/:id")
-  .get(protect, [param("id").isMongoId()], validateRequest, getFlat)
-  .delete(protect, [param("id").isMongoId()], validateRequest, deleteFlat); // only allowed when unoccupied
+  .get(protect, validateRequest(flatIdParamSchema), getFlat)
+  .delete(protect, validateRequest(flatIdParamSchema), deleteFlat); // only allowed when unoccupied
 
 // Flat-scoped history & analytics
 router.get(
   "/:id/tenants",
   protect,
-  [param("id").isMongoId()],
-  validateRequest,
+  validateRequest(flatIdParamSchema),
   getFlatTenantHistory,
-); // All tenants ever in this flat
+);
+
+// All tenants ever in this flat
 router.get(
   "/:id/revenue",
   protect,
-  [param("id").isMongoId()],
-  validateRequest,
+  validateRequest(flatIdParamSchema),
   getFlatRevenue,
-); // Revenue breakdown for this flat
+);
+
+// Revenue breakdown for this flat
 router.get(
   "/:id/vacant-history",
   protect,
-  [param("id").isMongoId()],
-  validateRequest,
+  validateRequest(flatIdParamSchema),
   getFlatVacantHistory,
-); // Vacancy periods for this flat
+);
+
+// Vacancy periods for this flat
 
 module.exports = router;

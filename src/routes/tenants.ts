@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const {
-  getTenants,
   getTenant,
+  getTenants,
   createTenant,
   updateTenant,
   changeTenant,
@@ -11,47 +11,33 @@ const {
 } = require("../controllers/tenantController");
 const { protect } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadMiddleware");
-const { body, param, query } = require("express-validator");
 const { validateRequest } = require("../middlewares/validationMiddleware");
+import {
+  getTenantsSchema,
+  createTenantSchema,
+  updateTenantSchema,
+  changeTenantSchema,
+  tenantIdParamSchema,
+  addRentRecordSchema,
+} from "../validations/tenant.validation";
+
 router
   .route("/")
-  .get(
-    protect,
-    [
-      query("status").optional().isIn(["active", "past"]),
-      query("rentDue").optional().isBoolean(),
-    ],
-    validateRequest,
-    getTenants,
-  )
+  .get(protect, validateRequest(getTenantsSchema), getTenants)
   .post(
     protect,
     upload.single("aadharImage"),
-    [
-      body("name").notEmpty(),
-      body("contactNumber").notEmpty(),
-      body("securityDeposit").isNumeric(),
-      body("monthlyRent").isNumeric(),
-      body("flatId").isMongoId(),
-    ],
-    validateRequest,
+    validateRequest(createTenantSchema),
     createTenant,
   );
 
 router
   .route("/:id")
-  .get(protect, [param("id").isMongoId()], validateRequest, getTenant)
+  .get(protect, validateRequest(tenantIdParamSchema), getTenant)
   .put(
     protect,
     upload.single("aadharImage"),
-    [
-      param("id").isMongoId(),
-      body("name").optional().notEmpty(),
-      body("contactNumber").optional().notEmpty(),
-      body("securityDeposit").optional().isNumeric(),
-      body("monthlyRent").optional().isNumeric(),
-    ],
-    validateRequest,
+    validateRequest(updateTenantSchema),
     updateTenant,
   );
 
@@ -59,35 +45,13 @@ router.post(
   "/:id/change",
   protect,
   upload.single("aadharImage"),
-  [
-    param("id").isMongoId(),
-    body("name").notEmpty(),
-    body("contactNumber").notEmpty(),
-    body("securityDeposit").isNumeric(),
-    body("monthlyRent").isNumeric(),
-  ],
-  validateRequest,
+  validateRequest(changeTenantSchema),
   changeTenant,
 );
 
 router
   .route("/:id/rent")
-  .get(
-    protect,
-    [param("id").isMongoId()],
-    validateRequest,
-    getRentHistoryForTenant,
-  )
-  .post(
-    protect,
-    [
-      param("id").isMongoId(),
-      body("amountPaid").isNumeric(),
-      body("rentMonth").notEmpty(),
-      body("rentYear").isNumeric(),
-    ],
-    validateRequest,
-    addRentRecord,
-  );
+  .get(protect, validateRequest(tenantIdParamSchema), getRentHistoryForTenant)
+  .post(protect, validateRequest(addRentRecordSchema), addRentRecord);
 
 module.exports = router;
