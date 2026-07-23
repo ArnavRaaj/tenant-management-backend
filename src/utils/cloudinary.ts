@@ -6,13 +6,16 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadImage = async (fileBuffer) => {
+const uploadImage = async (
+  fileBuffer: any,
+  folderPath = "tenant-management/aadhar",
+) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "tenant-management/aadhar",
+        folder: folderPath,
       },
-      (error, result) => {
+      (error: any, result: any) => {
         if (error) return reject(error);
         resolve(result);
       },

@@ -1,8 +1,9 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 const jwt = require("jsonwebtoken");
 const asyncHandler =
   require("express-async-handler") || require("../utils/helpers").asyncHandler;
 const User = require("../models/User");
+import { auditLog } from "./auditMiddleware";
 
 const protect = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
@@ -27,7 +28,8 @@ const protect = asyncHandler(
           return;
         }
 
-        next();
+        // Log the action and proceed
+        return auditLog(req, res, next);
       } catch (error) {
         console.error(error);
         res.status(401).json({ message: "Not authorized, token failed" });

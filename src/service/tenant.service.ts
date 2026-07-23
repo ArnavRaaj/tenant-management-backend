@@ -1,4 +1,5 @@
 import { Request } from "express";
+import mongoose from "mongoose";
 import {
   findTenantsRepo,
   createTenantRepo,
@@ -47,46 +48,58 @@ export const createTenantService = async (req: any) => {
     dateOfRenting,
   } = req.body;
 
-  const flat = await getFlatRepo(flatId);
-  if (!flat) {
-    throw new AppError("Flat not found", 404);
-  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (flat.currentTenant) {
-    throw new AppError("Flat is already occupied", 400);
-  }
-
-  let imageUrl = "";
-  if (req.file) {
-    try {
-      const result = await uploadImage(req.file.buffer);
-      imageUrl = result.secure_url;
-    } catch (error) {
-      console.error("Image upload failed", error);
-      throw new AppError("Image upload failed", 500);
+  try {
+    const flat = await getFlatRepo(flatId);
+    if (!flat) {
+      throw new AppError("Flat not found", 404);
     }
+
+    if (flat.currentTenant) {
+      throw new AppError("Flat is already occupied", 400);
+    }
+
+    const tenant = await createTenantRepo(
+      {
+        name,
+        contactNumber,
+        age,
+        aadharNumber,
+        aadharImage: "",
+        address,
+        occupantsCount,
+        securityDeposit,
+        monthlyRent,
+        pendingBalance: pendingBalance || 0,
+        flat: flatId,
+        isActive: true,
+        dateOfRenting: dateOfRenting || Date.now(),
+      },
+      session,
+    );
+
+    flat.currentTenant = tenant._id;
+    await flat.save({ session });
+
+    if (req.file) {
+      const folderPath = `tenant-management/aadhar/${flat.flatNumber}/${tenant._id}`;
+      const result: any = await uploadImage(req.file.buffer, folderPath);
+      tenant.aadharImage = result.secure_url;
+      await tenant.save({ session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    return tenant;
+  } catch (error: any) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("Tenant creation failed", error);
+    if (error instanceof AppError) throw error;
+    throw new AppError(error.message || "Tenant creation failed", 500);
   }
-
-  const tenant = await createTenantRepo({
-    name,
-    contactNumber,
-    age,
-    aadharNumber,
-    aadharImage: imageUrl,
-    address,
-    occupantsCount,
-    securityDeposit,
-    monthlyRent,
-    pendingBalance: pendingBalance || 0,
-    flat: flatId,
-    isActive: true,
-    dateOfRenting: dateOfRenting || Date.now(),
-  });
-
-  flat.currentTenant = tenant._id;
-  await flat.save();
-
-  return tenant;
 };
 
 export const updateTenantService = async (req: any) => {
@@ -98,7 +111,8 @@ export const updateTenantService = async (req: any) => {
   let imageUrl = tenant.aadharImage;
   if (req.file) {
     try {
-      const result = await uploadImage(req.file.buffer);
+      const folderPath = `tenant-management/aadhar/${tenant.flat.flatNumber}/${tenant._id}`;
+      const result: any = await uploadImage(req.file.buffer, folderPath);
       imageUrl = result.secure_url;
     } catch (error) {
       console.error("Image upload failed", error);

@@ -16,6 +16,11 @@ const UserSchema = new mongoose.Schema(
         "Please add a valid email",
       ],
     },
+    role: {
+      type: String,
+      enum: ["superadmin", "admin"],
+      default: "admin",
+    },
     password: {
       type: String,
       required: [true, "Please add a password"],
@@ -29,17 +34,21 @@ const UserSchema = new mongoose.Schema(
 );
 
 // Encrypt password using bcrypt
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function (this: any, next: any) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
+UserSchema.methods.matchPassword = async function (
+  this: any,
+  enteredPassword: string,
+) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

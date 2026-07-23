@@ -9,9 +9,6 @@ const {
   addRentRecord,
   getRentHistoryForTenant,
 } = require("../controllers/tenantController");
-const { protect } = require("../middlewares/authMiddleware");
-const upload = require("../middlewares/uploadMiddleware");
-const { validateRequest } = require("../middlewares/validationMiddleware");
 import {
   getTenantsSchema,
   createTenantSchema,
@@ -20,12 +17,17 @@ import {
   tenantIdParamSchema,
   addRentRecordSchema,
 } from "../validations/tenant.validation";
+const upload = require("../middlewares/uploadMiddleware");
+const { protect } = require("../middlewares/authMiddleware");
+import { requireSuperadmin } from "../middlewares/roleMiddleware";
+const { validateRequest } = require("../middlewares/validationMiddleware");
 
 router
   .route("/")
   .get(protect, validateRequest(getTenantsSchema), getTenants)
   .post(
     protect,
+    requireSuperadmin,
     upload.single("aadharImage"),
     validateRequest(createTenantSchema),
     createTenant,
@@ -36,6 +38,7 @@ router
   .get(protect, validateRequest(tenantIdParamSchema), getTenant)
   .put(
     protect,
+    requireSuperadmin,
     upload.single("aadharImage"),
     validateRequest(updateTenantSchema),
     updateTenant,
@@ -44,6 +47,7 @@ router
 router.post(
   "/:id/change",
   protect,
+  requireSuperadmin,
   upload.single("aadharImage"),
   validateRequest(changeTenantSchema),
   changeTenant,
@@ -52,6 +56,11 @@ router.post(
 router
   .route("/:id/rent")
   .get(protect, validateRequest(tenantIdParamSchema), getRentHistoryForTenant)
-  .post(protect, validateRequest(addRentRecordSchema), addRentRecord);
+  .post(
+    protect,
+    requireSuperadmin,
+    validateRequest(addRentRecordSchema),
+    addRentRecord,
+  );
 
 module.exports = router;

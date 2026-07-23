@@ -9,22 +9,34 @@ const {
   getFlatTenantHistory,
   getFlatVacantHistory,
 } = require("../controllers/flatController");
-const { protect } = require("../middlewares/authMiddleware");
-const { validateRequest } = require("../middlewares/validationMiddleware");
 const {
   getFlatsSchema,
   createFlatSchema,
   flatIdParamSchema,
 } = require("../validations/flat.validation");
+const { protect } = require("../middlewares/authMiddleware");
+import { requireSuperadmin } from "../middlewares/roleMiddleware";
+const { validateRequest } = require("../middlewares/validationMiddleware");
 
 router
   .route("/")
   .get(protect, validateRequest(getFlatsSchema), getFlats) // supports ?status=vacant|occupied
-  .post(protect, validateRequest(createFlatSchema), createFlat);
+  .post(
+    protect,
+    requireSuperadmin,
+    validateRequest(createFlatSchema),
+    createFlat,
+  );
+
 router
   .route("/:id")
   .get(protect, validateRequest(flatIdParamSchema), getFlat)
-  .delete(protect, validateRequest(flatIdParamSchema), deleteFlat); // only allowed when unoccupied
+  .delete(
+    protect,
+    requireSuperadmin,
+    validateRequest(flatIdParamSchema),
+    deleteFlat,
+  ); // only allowed when unoccupied
 
 // Flat-scoped history & analytics
 router.get(

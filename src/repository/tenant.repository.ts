@@ -9,7 +9,11 @@ export const findTenantByIdRepo = async (id: string) => {
   return await Tenant.findById(id).populate("flat", "flatNumber floor");
 };
 
-export const createTenantRepo = async (data: any) => {
+export const createTenantRepo = async (data: any, session?: any) => {
+  if (session) {
+    const tenants = await Tenant.create([data], { session });
+    return tenants[0];
+  }
   return await Tenant.create(data);
 };
 
