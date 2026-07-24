@@ -18,8 +18,13 @@ export const createTenantSchema = {
     name: Joi.string().required(),
     contactNumber: Joi.string().required(),
     age: Joi.number().optional(),
-    aadharNumber: Joi.string().optional(),
-    address: Joi.string().optional(),
+    aadharNumber: Joi.string()
+      .pattern(/^\d{12}$/)
+      .optional()
+      .messages({
+        "string.pattern.base": "Aadhar number must be exactly 12 digits",
+      }),
+    address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().required(),
     monthlyRent: Joi.number().required(),
@@ -37,8 +42,13 @@ export const updateTenantSchema = {
     name: Joi.string().optional(),
     contactNumber: Joi.string().optional(),
     age: Joi.number().optional(),
-    aadharNumber: Joi.string().optional(),
-    address: Joi.string().optional(),
+    aadharNumber: Joi.string()
+      .pattern(/^\d{12}$/)
+      .optional()
+      .messages({
+        "string.pattern.base": "Aadhar number must be exactly 12 digits",
+      }),
+    address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().optional(),
     monthlyRent: Joi.number().optional(),
@@ -55,8 +65,13 @@ export const changeTenantSchema = {
     name: Joi.string().required(),
     contactNumber: Joi.string().required(),
     age: Joi.number().optional(),
-    aadharNumber: Joi.string().optional(),
-    address: Joi.string().optional(),
+    aadharNumber: Joi.string()
+      .pattern(/^\d{12}$/)
+      .optional()
+      .messages({
+        "string.pattern.base": "Aadhar number must be exactly 12 digits",
+      }),
+    address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().required(),
     monthlyRent: Joi.number().required(),

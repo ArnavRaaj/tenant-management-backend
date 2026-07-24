@@ -68,7 +68,7 @@ export const createTenantService = async (req: any) => {
         age,
         aadharNumber,
         aadharImage: "",
-        address,
+        address: address || null,
         occupantsCount,
         securityDeposit,
         monthlyRent,

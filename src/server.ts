@@ -28,6 +28,7 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/flats", require("./routes/flats"));
 app.use("/api/tenants", require("./routes/tenants"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/addresses", require("./routes/address"));
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Tenant Management API is running...");

@@ -3,19 +3,33 @@ const Tenant = require("../models/Tenant");
 const RentHistory = require("../models/RentHistory");
 
 export const getFlatListRepo = async (filter: any) => {
-  return await Flat.find(filter).populate("currentTenant");
+  return await Flat.find(filter)
+    .populate({
+      path: "currentTenant",
+      populate: { path: "address" },
+    })
+    .populate("address");
 };
 
 export const getFlatRepo = async (id: string) => {
-  return await Flat.findById(id).populate("currentTenant");
+  return await Flat.findById(id)
+    .populate({
+      path: "currentTenant",
+      populate: { path: "address" },
+    })
+    .populate("address");
 };
 
 export const findOneFlatByNumberRepo = async (flatNumber: string) => {
   return await Flat.findOne({ flatNumber });
 };
 
-export const createFlatRepo = async (flatNumber: string, floor: number) => {
-  return await Flat.create({ flatNumber, floor });
+export const createFlatRepo = async (
+  flatNumber: string,
+  floor: number,
+  address?: string,
+) => {
+  return await Flat.create({ flatNumber, floor, address: address || null });
 };
 
 export const deleteFlatRepo = async (flat: any) => {

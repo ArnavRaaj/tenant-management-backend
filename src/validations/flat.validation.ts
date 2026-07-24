@@ -21,6 +21,7 @@ export const createFlatSchema = {
     floor: Joi.number().required().messages({
       "any.required": "Floor must be a number",
     }),
+    address: objectId.optional(),
   }),
 };
 

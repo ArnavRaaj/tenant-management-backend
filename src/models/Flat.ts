@@ -16,6 +16,11 @@ const FlatSchema = new mongoose.Schema(
       ref: "Tenant",
       default: null,
     },
+    address: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Address",
+      default: null,
+    },
   },
   {
     timestamps: true,

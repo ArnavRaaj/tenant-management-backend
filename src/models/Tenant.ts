@@ -21,7 +21,9 @@ const TenantSchema = new mongoose.Schema(
       default: "",
     },
     address: {
-      type: String,
+      type: mongoose.Schema.ObjectId,
+      ref: "Address",
+      default: null,
     },
     occupantsCount: {
       type: Number,
