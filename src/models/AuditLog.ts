@@ -20,4 +20,6 @@ const AuditLogSchema = new mongoose.Schema(
   },
 );
 
+AuditLogSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("AuditLog", AuditLogSchema);

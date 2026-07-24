@@ -35,4 +35,7 @@ const RentHistorySchema = new mongoose.Schema(
   },
 );
 
+RentHistorySchema.index({ tenant: 1 });
+RentHistorySchema.index({ flat: 1 });
+
 module.exports = mongoose.model("RentHistory", RentHistorySchema);

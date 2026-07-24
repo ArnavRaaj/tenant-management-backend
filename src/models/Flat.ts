@@ -22,4 +22,6 @@ const FlatSchema = new mongoose.Schema(
   },
 );
 
+FlatSchema.index({ currentTenant: 1 });
+
 module.exports = mongoose.model("Flat", FlatSchema);

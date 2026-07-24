@@ -62,4 +62,7 @@ const TenantSchema = new mongoose.Schema(
   },
 );
 
+TenantSchema.index({ flat: 1, isActive: -1 });
+TenantSchema.index({ isActive: 1 });
+
 module.exports = mongoose.model("Tenant", TenantSchema);
