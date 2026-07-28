@@ -16,6 +16,10 @@ const TenantSchema = new mongoose.Schema(
     aadharNumber: {
       type: String,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
     aadharImage: {
       type: String,
       default: "",

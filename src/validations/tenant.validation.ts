@@ -24,6 +24,7 @@ export const createTenantSchema = {
       .messages({
         "string.pattern.base": "Aadhar number must be exactly 12 digits",
       }),
+    gender: Joi.string().valid("male", "female", "other").optional(),
     address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().required(),
@@ -48,6 +49,7 @@ export const updateTenantSchema = {
       .messages({
         "string.pattern.base": "Aadhar number must be exactly 12 digits",
       }),
+    gender: Joi.string().valid("male", "female", "other").optional(),
     address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().optional(),
@@ -71,6 +73,7 @@ export const changeTenantSchema = {
       .messages({
         "string.pattern.base": "Aadhar number must be exactly 12 digits",
       }),
+    gender: Joi.string().valid("male", "female", "other").optional(),
     address: objectId.optional(),
     occupantsCount: Joi.number().optional(),
     securityDeposit: Joi.number().required(),
