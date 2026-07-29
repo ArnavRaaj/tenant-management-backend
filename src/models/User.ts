@@ -27,6 +27,14 @@ const UserSchema = new mongoose.Schema(
       minlength: 6,
       select: false, // Do not return password by default
     },
+    resetPasswordOtp: {
+      type: String,
+      select: false,
+    },
+    resetPasswordOtpExpire: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,

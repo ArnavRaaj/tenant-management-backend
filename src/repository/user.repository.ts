@@ -15,3 +15,14 @@ export const findUserByEmail = async (email: string) => {
 export const findOneUserByEmail = async (email: string) => {
   return await User.findOne({ email }).select("+password");
 };
+
+export const findUserByEmailWithOtp = async (email: string) => {
+  return await User.findOne({ email }).select(
+    "+resetPasswordOtp +resetPasswordOtpExpire +password",
+  );
+};
+
+export const saveUserDoc = async (user: any) => {
+  return await user.save();
+};
+

@@ -3,6 +3,8 @@ import {
   createUser,
   findOneUserByEmail,
   findUserByEmail,
+  findUserByEmailWithOtp,
+  saveUserDoc,
 } from "../repository/user.repository";
 import { AppError } from "../utils/AppError";
 
@@ -55,3 +57,92 @@ export const loginUserService = async (req: Request) => {
 export const getMeService = async (req: any) => {
   return req.user;
 };
+
+// ======================== FORGOT PASSWORD FLOW ========================
+
+const generateAndSaveOtp = async (user: any, isResend: boolean = false) => {
+  // Generate a random 6-digit number
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Set OTP and expiration time (15 minutes from now)
+  user.resetPasswordOtp = otp;
+  user.resetPasswordOtpExpire = new Date(Date.now() + 15 * 60 * 1000);
+  await saveUserDoc(user);
+
+  // Print clearly in terminal console as requested
+  console.log("\n===========================================");
+  console.log(isResend ? `🔄 [PASSWORD RESET OTP RE-SENT]` : `🔑 [PASSWORD RESET OTP SENT]`);
+  console.log(`📧 Email: ${user.email}`);
+  console.log(`🔢 OTP:   ${otp}`);
+  console.log("===========================================\n");
+
+  return otp;
+};
+
+export const sendOtpService = async (req: Request) => {
+  const { email } = req.body;
+  const user = await findUserByEmailWithOtp(email);
+
+  if (!user) {
+    throw new AppError("No registered account found with that email address", 404);
+  }
+
+  await generateAndSaveOtp(user, false);
+  return { message: "OTP has been generated and sent successfully" };
+};
+
+export const resendOtpService = async (req: Request) => {
+  const { email } = req.body;
+  const user = await findUserByEmailWithOtp(email);
+
+  if (!user) {
+    throw new AppError("No registered account found with that email address", 404);
+  }
+
+  await generateAndSaveOtp(user, true);
+  return { message: "A new OTP has been generated and sent successfully" };
+};
+
+export const verifyOtpService = async (req: Request) => {
+  const { email, otp } = req.body;
+  const user = await findUserByEmailWithOtp(email);
+
+  if (!user || !user.resetPasswordOtp || user.resetPasswordOtp !== otp) {
+    throw new AppError("Invalid or incorrect OTP", 400);
+  }
+
+  if (new Date(user.resetPasswordOtpExpire) < new Date()) {
+    throw new AppError("OTP has expired. Please resend or request a new OTP.", 400);
+  }
+
+  return { message: "OTP verified successfully", valid: true };
+};
+
+export const resetPasswordService = async (req: Request) => {
+  const { email, otp, password, confirmPassword } = req.body;
+
+  if (password !== confirmPassword) {
+    throw new AppError("Password and confirm password do not match", 400);
+  }
+
+  const user = await findUserByEmailWithOtp(email);
+
+  // Re-verify OTP as a strict security measure before changing password
+  if (!user || !user.resetPasswordOtp || user.resetPasswordOtp !== otp) {
+    throw new AppError("Invalid OTP authorization for password reset", 400);
+  }
+
+  if (new Date(user.resetPasswordOtpExpire) < new Date()) {
+    throw new AppError("OTP authorization expired. Please start over.", 400);
+  }
+
+  // Assign new password (will automatically trigger bcrypt hashing on save)
+  user.password = password;
+  user.resetPasswordOtp = undefined;
+  user.resetPasswordOtpExpire = undefined;
+
+  await saveUserDoc(user);
+
+  return { message: "Password updated successfully. You can now log in with your new password." };
+};
+
