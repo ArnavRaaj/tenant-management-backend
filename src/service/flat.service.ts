@@ -52,7 +52,7 @@ export const deleteFlatService = async (req: Request) => {
   if (flat.currentTenant) {
     throw new AppError(
       "Cannot delete an occupied flat. Vacate the tenant first.",
-      400
+      400,
     );
   }
 
@@ -77,12 +77,12 @@ export const getFlatRevenueService = async (req: Request) => {
   }
 
   const monthlyBreakdown = await getRentHistoryByFlatIdRepo(
-    req.params.id as string
+    req.params.id as string,
   );
 
   const grandTotal = monthlyBreakdown.reduce(
     (sum: number, m: any) => sum + m.totalPaid,
-    0
+    0,
   );
 
   const formatted = monthlyBreakdown.map((m: any) => ({
@@ -119,7 +119,7 @@ export const getFlatVacantHistoryService = async (req: Request) => {
         nextTenant: next.name,
         daysVacant: Math.ceil(
           (new Date(nextMovedIn).getTime() - new Date(vacatedAt).getTime()) /
-          (1000 * 60 * 60 * 24)
+            (1000 * 60 * 60 * 24),
         ),
       });
     }
@@ -134,7 +134,7 @@ export const getFlatVacantHistoryService = async (req: Request) => {
       nextTenant: null,
       daysVacant: Math.ceil(
         (new Date().getTime() - new Date(lastTenant.vacatedDate).getTime()) /
-        (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       ),
     });
   }

@@ -8,7 +8,7 @@ const {
   verifyOtp,
   registerUser,
   resetPassword,
-} = require("../controllers/authController");
+} = require("../controllers/auth.controller");
 const {
   loginSchema,
   sendOtpSchema,
@@ -70,4 +70,3 @@ router.post(
 );
 
 module.exports = router;
-

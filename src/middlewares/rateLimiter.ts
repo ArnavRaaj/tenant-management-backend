@@ -26,7 +26,10 @@ export const createTokenBucketLimiter = (options: TokenBucketOptions) => {
   return (req: Request, res: Response, next: NextFunction) => {
     // Identify consumer by email in body (if available) or fallback to IP address
     const identifier =
-      req?.body?.email || req.ip || req.headers["x-forwarded-for"] || "unknown_ip";
+      req?.body?.email ||
+      req.ip ||
+      req.headers["x-forwarded-for"] ||
+      "unknown_ip";
     const key = `${keyPrefix}:${identifier}`;
 
     const now = Date.now();
@@ -52,7 +55,10 @@ export const createTokenBucketLimiter = (options: TokenBucketOptions) => {
 
     // Set informational RateLimit headers
     res.setHeader("X-RateLimit-Limit", capacity.toString());
-    res.setHeader("X-RateLimit-Remaining", Math.floor(bucket.tokens).toString());
+    res.setHeader(
+      "X-RateLimit-Remaining",
+      Math.floor(bucket.tokens).toString(),
+    );
 
     // Check if at least 1 token is available to process the request
     if (bucket.tokens >= 1) {

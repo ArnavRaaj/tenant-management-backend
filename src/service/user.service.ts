@@ -71,7 +71,11 @@ const generateAndSaveOtp = async (user: any, isResend: boolean = false) => {
 
   // Print clearly in terminal console as requested
   console.log("\n===========================================");
-  console.log(isResend ? `🔄 [PASSWORD RESET OTP RE-SENT]` : `🔑 [PASSWORD RESET OTP SENT]`);
+  console.log(
+    isResend
+      ? `🔄 [PASSWORD RESET OTP RE-SENT]`
+      : `🔑 [PASSWORD RESET OTP SENT]`,
+  );
   console.log(`📧 Email: ${user.email}`);
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
@@ -84,7 +88,10 @@ export const sendOtpService = async (req: Request) => {
   const user = await findUserByEmailWithOtp(email);
 
   if (!user) {
-    throw new AppError("No registered account found with that email address", 404);
+    throw new AppError(
+      "No registered account found with that email address",
+      404,
+    );
   }
 
   await generateAndSaveOtp(user, false);
@@ -96,7 +103,10 @@ export const resendOtpService = async (req: Request) => {
   const user = await findUserByEmailWithOtp(email);
 
   if (!user) {
-    throw new AppError("No registered account found with that email address", 404);
+    throw new AppError(
+      "No registered account found with that email address",
+      404,
+    );
   }
 
   await generateAndSaveOtp(user, true);
@@ -112,7 +122,10 @@ export const verifyOtpService = async (req: Request) => {
   }
 
   if (new Date(user.resetPasswordOtpExpire) < new Date()) {
-    throw new AppError("OTP has expired. Please resend or request a new OTP.", 400);
+    throw new AppError(
+      "OTP has expired. Please resend or request a new OTP.",
+      400,
+    );
   }
 
   return { message: "OTP verified successfully", valid: true };
@@ -143,6 +156,8 @@ export const resetPasswordService = async (req: Request) => {
 
   await saveUserDoc(user);
 
-  return { message: "Password updated successfully. You can now log in with your new password." };
+  return {
+    message:
+      "Password updated successfully. You can now log in with your new password.",
+  };
 };
-

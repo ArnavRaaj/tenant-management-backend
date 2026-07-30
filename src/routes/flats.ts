@@ -8,7 +8,7 @@ const {
   getFlatRevenue,
   getFlatTenantHistory,
   getFlatVacantHistory,
-} = require("../controllers/flatController");
+} = require("../controllers/flat.controller");
 const {
   getFlatsSchema,
   createFlatSchema,

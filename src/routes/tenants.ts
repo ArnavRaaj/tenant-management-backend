@@ -8,7 +8,7 @@ const {
   changeTenant,
   addRentRecord,
   getRentHistoryForTenant,
-} = require("../controllers/tenantController");
+} = require("../controllers/tenant.controller");
 import {
   getTenantsSchema,
   createTenantSchema,

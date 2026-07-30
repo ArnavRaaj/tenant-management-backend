@@ -25,4 +25,3 @@ export const findUserByEmailWithOtp = async (email: string) => {
 export const saveUserDoc = async (user: any) => {
   return await user.save();
 };
-

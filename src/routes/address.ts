@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getAddresses,
   createAddress,
-} = require("../controllers/addressController");
+} = require("../controllers/address.controller");
 import {
   createAddressSchema,
   getAddressesSchema,

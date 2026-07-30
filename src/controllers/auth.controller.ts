@@ -1,11 +1,11 @@
 import { Request } from "express";
 import {
   getMeService,
-  loginUserService,
-  registerUserService,
   sendOtpService,
   resendOtpService,
+  loginUserService,
   verifyOtpService,
+  registerUserService,
   resetPasswordService,
 } from "../service/user.service";
 const { asyncHandler } = require("../utils/helpers");
@@ -51,4 +51,3 @@ exports.verifyOtp = asyncHandler(async (req: Request) => {
 exports.resetPassword = asyncHandler(async (req: Request) => {
   return await resetPasswordService(req);
 });
-

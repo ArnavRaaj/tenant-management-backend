@@ -1,7 +1,7 @@
 import { Request } from "express";
 import {
-  createAddressService,
   getAddressesService,
+  createAddressService,
 } from "../service/address.service";
 const { asyncHandler } = require("../utils/helpers");
 

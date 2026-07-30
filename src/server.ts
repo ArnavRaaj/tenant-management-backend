@@ -5,7 +5,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
-const connectDB = require("./config/db");
+const connectDB = require("./config/mongo.config");
 
 // Load env vars
 dotenv.config();
