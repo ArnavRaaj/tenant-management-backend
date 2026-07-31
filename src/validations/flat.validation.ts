@@ -10,6 +10,8 @@ const objectId = Joi.string()
 export const getFlatsSchema = {
   query: Joi.object({
     status: Joi.string().valid("vacant", "occupied").optional(),
+    buildingName: Joi.string().optional(),
+    tag: Joi.string().optional(),
   }),
 };
 
@@ -20,6 +22,9 @@ export const createFlatSchema = {
     }),
     floor: Joi.number().required().messages({
       "any.required": "Floor must be a number",
+    }),
+    buildingName: Joi.string().required().messages({
+      "any.required": "Building/Apartment name is required",
     }),
     address: objectId.optional(),
   }),

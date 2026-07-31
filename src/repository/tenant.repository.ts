@@ -2,15 +2,11 @@ const Tenant = require("../models/Tenant");
 const RentHistory = require("../models/RentHistory");
 
 export const findTenantsRepo = async (filter: any) => {
-  return await Tenant.find(filter)
-    .populate("flat", "flatNumber floor")
-    .populate("address");
+  return await Tenant.find(filter).populate("flat", "flatNumber floor");
 };
 
 export const findTenantByIdRepo = async (id: string) => {
-  return await Tenant.findById(id)
-    .populate("flat", "flatNumber floor")
-    .populate("address");
+  return await Tenant.findById(id).populate("flat", "flatNumber floor");
 };
 
 export const createTenantRepo = async (data: any, session?: any) => {

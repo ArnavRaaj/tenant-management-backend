@@ -5,11 +5,14 @@ const FlatSchema = new mongoose.Schema(
     flatNumber: {
       type: String,
       required: true,
-      unique: true,
     },
     floor: {
       type: Number,
       required: true,
+    },
+    buildingName: {
+      type: String,
+      required: [true, "Please add a building/apartment name"],
     },
     currentTenant: {
       type: mongoose.Schema.ObjectId,
@@ -27,6 +30,9 @@ const FlatSchema = new mongoose.Schema(
   },
 );
 
+// Same flat number can exist in different buildings, but not in the same building
+FlatSchema.index({ flatNumber: 1, buildingName: 1 }, { unique: true });
 FlatSchema.index({ currentTenant: 1 });
 
 module.exports = mongoose.model("Flat", FlatSchema);
+

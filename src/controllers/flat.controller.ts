@@ -5,15 +5,22 @@ import {
   deleteFlatService,
   getFlatListService,
   getFlatRevenueService,
+  getBuildingTagsService,
   getFlatTenantHistoryService,
   getFlatVacantHistoryService,
 } from "../service/flat.service";
 const { asyncHandler } = require("../utils/helpers");
 
-// @desc    Get all flats — supports ?status=vacant|occupied
+// @desc    Get all flats — supports ?status=vacant|occupied&buildingName=...
 // @route   GET /api/flats
 exports.getFlats = asyncHandler(async (req: Request) => {
   return await getFlatListService(req);
+});
+
+// @desc    Get all distinct building/apartment names (tags)
+// @route   GET /api/flats/tags
+exports.getBuildingTags = asyncHandler(async () => {
+  return await getBuildingTagsService();
 });
 
 // @desc    Get single flat
@@ -51,3 +58,4 @@ exports.getFlatRevenue = asyncHandler(async (req: Request) => {
 exports.getFlatVacantHistory = asyncHandler(async (req: Request) => {
   return await getFlatVacantHistoryService(req);
 });
+

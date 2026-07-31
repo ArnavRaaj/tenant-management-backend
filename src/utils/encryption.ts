@@ -58,3 +58,32 @@ export const decrypt = (encryptedText: string): string => {
     return encryptedText;
   }
 };
+
+export const ENCRYPTED_TENANT_FIELDS = [
+  "contactNumber",
+  "aadharNumber",
+  "gender",
+  "aadharImage",
+];
+
+export const encryptTenantFields = (data: any): any => {
+  if (!data) return data;
+  const encrypted = { ...data };
+  for (const field of ENCRYPTED_TENANT_FIELDS) {
+    if (encrypted[field]) {
+      encrypted[field] = encrypt(encrypted[field]);
+    }
+  }
+  return encrypted;
+};
+
+export const decryptTenantFields = (tenant: any): any => {
+  if (!tenant) return tenant;
+  const obj = tenant.toObject ? tenant.toObject() : { ...tenant };
+  for (const field of ENCRYPTED_TENANT_FIELDS) {
+    if (obj[field]) {
+      obj[field] = decrypt(obj[field]);
+    }
+  }
+  return obj;
+};

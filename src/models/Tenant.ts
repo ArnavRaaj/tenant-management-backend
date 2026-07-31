@@ -18,16 +18,17 @@ const TenantSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["male", "female", "other"],
     },
     aadharImage: {
       type: String,
       default: "",
     },
     address: {
-      type: mongoose.Schema.ObjectId,
-      ref: "Address",
-      default: null,
+      addressLine1: { type: String, default: "" },
+      addressLine2: { type: String, default: "" },
+      city: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
+      state: { type: String, default: "" },
     },
     occupantsCount: {
       type: Number,

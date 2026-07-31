@@ -5,19 +5,33 @@ import {
   deleteFlatRepo,
   getFlatListRepo,
   getTenantsByFlatIdRepo,
-  findOneFlatByNumberRepo,
+  findOneFlatByNumberAndBuildingRepo,
   getTenantsByFlatIdAscRepo,
   getRentHistoryByFlatIdRepo,
+  getDistinctBuildingNamesRepo,
 } from "../repository/flat.repository";
 import { AppError } from "../utils/AppError";
+import { decryptTenantFields } from "../utils/encryption";
+
+const decryptFlatTenant = (flat: any): any => {
+  if (!flat) return flat;
+  const obj = flat.toObject ? flat.toObject() : { ...flat };
+  if (obj.currentTenant && typeof obj.currentTenant === "object") {
+    obj.currentTenant = decryptTenantFields(obj.currentTenant);
+  }
+  return obj;
+};
 
 export const getFlatListService = async (req: Request) => {
   const filter: any = {};
   if (req.query.status === "vacant") filter.currentTenant = null;
   if (req.query.status === "occupied") filter.currentTenant = { $ne: null };
+  if (req.query.buildingName || req.query.tag) {
+    filter.buildingName = req.query.buildingName || req.query.tag;
+  }
 
   const flats = await getFlatListRepo(filter);
-  return flats;
+  return flats.map(decryptFlatTenant);
 };
 
 export const getFlatService = async (req: Request) => {
@@ -27,19 +41,30 @@ export const getFlatService = async (req: Request) => {
     throw new AppError("Flat not found", 404);
   }
 
-  return flat;
+  return decryptFlatTenant(flat);
 };
 
 export const createFlatService = async (req: Request) => {
-  const { flatNumber, floor } = req.body;
+  const { flatNumber, floor, buildingName, address } = req.body;
 
-  const flatExists = await findOneFlatByNumberRepo(flatNumber);
+  const flatExists = await findOneFlatByNumberAndBuildingRepo(
+    flatNumber,
+    buildingName,
+  );
   if (flatExists) {
-    throw new AppError("Flat already exists", 400);
+    throw new AppError(
+      `Flat ${flatNumber} already exists in ${buildingName}`,
+      400,
+    );
   }
 
-  const flat = await createFlatRepo(flatNumber, floor);
+  const flat = await createFlatRepo(flatNumber, floor, buildingName, address);
   return flat;
+};
+
+export const getBuildingTagsService = async () => {
+  const tags = await getDistinctBuildingNamesRepo();
+  return tags.sort();
 };
 
 export const deleteFlatService = async (req: Request) => {
@@ -67,7 +92,7 @@ export const getFlatTenantHistoryService = async (req: Request) => {
   }
 
   const tenants = await getTenantsByFlatIdRepo(req.params.id as string);
-  return tenants;
+  return tenants.map(decryptTenantFields);
 };
 
 export const getFlatRevenueService = async (req: Request) => {

@@ -10,44 +10,13 @@ import {
 } from "../repository/tenant.repository";
 import { getFlatRepo } from "../repository/flat.repository";
 import { AppError } from "../utils/AppError";
-import { encrypt, decrypt } from "../utils/encryption";
+import {
+  encrypt,
+  ENCRYPTED_TENANT_FIELDS,
+  encryptTenantFields,
+  decryptTenantFields,
+} from "../utils/encryption";
 const { uploadImage } = require("../utils/cloudinary");
-
-// Fields that require encryption
-const ENCRYPTED_FIELDS = [
-  "contactNumber",
-  "aadharNumber",
-  "gender",
-  "aadharImage",
-];
-
-/**
- * Encrypts sensitive fields before saving to DB.
- */
-const encryptTenantFields = (data: any): any => {
-  const encrypted = { ...data };
-  for (const field of ENCRYPTED_FIELDS) {
-    if (encrypted[field]) {
-      encrypted[field] = encrypt(encrypted[field]);
-    }
-  }
-  return encrypted;
-};
-
-/**
- * Decrypts sensitive fields after reading from DB.
- * Works on a single tenant document (Mongoose doc or plain object).
- */
-const decryptTenantFields = (tenant: any): any => {
-  if (!tenant) return tenant;
-  const obj = tenant.toObject ? tenant.toObject() : { ...tenant };
-  for (const field of ENCRYPTED_FIELDS) {
-    if (obj[field]) {
-      obj[field] = decrypt(obj[field]);
-    }
-  }
-  return obj;
-};
 
 export const getTenantsService = async (req: Request) => {
   const filter: any = {};
@@ -99,6 +68,15 @@ export const createTenantService = async (req: any) => {
       throw new AppError("Flat is already occupied", 400);
     }
 
+    let parsedAddress = address;
+    if (typeof address === "string" && address.trim().startsWith("{")) {
+      try {
+        parsedAddress = JSON.parse(address);
+      } catch {
+        /* silent */
+      }
+    }
+
     const tenantData = encryptTenantFields({
       name,
       contactNumber,
@@ -106,7 +84,7 @@ export const createTenantService = async (req: any) => {
       aadharNumber,
       gender,
       aadharImage: "",
-      address: address || null,
+      address: parsedAddress || {},
       occupantsCount,
       securityDeposit,
       monthlyRent,
@@ -161,7 +139,14 @@ export const updateTenantService = async (req: any) => {
 
   // Encrypt sensitive fields from the request body
   const updateData = { ...req.body };
-  for (const field of ENCRYPTED_FIELDS) {
+  if (typeof updateData.address === "string" && updateData.address.trim().startsWith("{")) {
+    try {
+      updateData.address = JSON.parse(updateData.address);
+    } catch {
+      /* silent */
+    }
+  }
+  for (const field of ENCRYPTED_TENANT_FIELDS) {
     if (field === "aadharImage") continue; // handled separately above
     if (updateData[field]) {
       updateData[field] = encrypt(updateData[field]);

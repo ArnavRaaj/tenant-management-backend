@@ -6,6 +6,7 @@ const {
   createFlat,
   deleteFlat,
   getFlatRevenue,
+  getBuildingTags,
   getFlatTenantHistory,
   getFlatVacantHistory,
 } = require("../controllers/flat.controller");
@@ -20,7 +21,7 @@ const { validateRequest } = require("../middlewares/validationMiddleware");
 
 router
   .route("/")
-  .get(protect, validateRequest(getFlatsSchema), getFlats) // supports ?status=vacant|occupied
+  .get(protect, validateRequest(getFlatsSchema), getFlats) // supports ?status=vacant|occupied&buildingName=...
   .post(
     protect,
     requireSuperadmin,
@@ -28,15 +29,17 @@ router
     createFlat,
   );
 
-router
-  .route("/:id")
-  .get(protect, validateRequest(flatIdParamSchema), getFlat)
-  .delete(
-    protect,
-    requireSuperadmin,
-    validateRequest(flatIdParamSchema),
-    deleteFlat,
-  ); // only allowed when unoccupied
+// Static path avoids any conflict with /:id wildcard
+router.get("/meta/tags", protect, getBuildingTags);
+
+router.get("/:id", protect, validateRequest(flatIdParamSchema), getFlat);
+router.delete(
+  "/:id",
+  protect,
+  requireSuperadmin,
+  validateRequest(flatIdParamSchema),
+  deleteFlat,
+);
 
 // Flat-scoped history & analytics
 router.get(
