@@ -22,8 +22,7 @@ import { requireSuperadmin } from "../middlewares/roleMiddleware";
 import { createTokenBucketLimiter } from "../middlewares/rateLimiter";
 const { validateRequest } = require("../middlewares/validationMiddleware");
 
-// Instantiate Token Bucket rate limiter for OTP requests (Max 3 tokens in burst, 1 refilled every 60s)
-const otpLimiter = createTokenBucketLimiter({
+const rateLimiter = createTokenBucketLimiter({
   capacity: 3,
   refillRateSeconds: 60,
   keyPrefix: "otp_limit",
@@ -31,7 +30,7 @@ const otpLimiter = createTokenBucketLimiter({
 
 router.get("/me", protect, getMe);
 
-router.post("/login", validateRequest(loginSchema), loginUser);
+router.post("/login",rateLimiter, validateRequest(loginSchema), loginUser);
 
 router.post(
   "/register",
@@ -45,14 +44,14 @@ router.post(
 
 router.post(
   "/forgot-password/send-otp",
-  otpLimiter,
+  rateLimiter,
   validateRequest(sendOtpSchema),
   sendOtp,
 );
 
 router.post(
   "/forgot-password/resend-otp",
-  otpLimiter,
+  rateLimiter,
   validateRequest(resendOtpSchema),
   resendOtp,
 );
