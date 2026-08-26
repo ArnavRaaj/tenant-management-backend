@@ -8,6 +8,7 @@ const {
   verifyOtp,
   registerUser,
   resetPassword,
+  verifyEmail,
 } = require("../controllers/auth.controller");
 const {
   loginSchema,
@@ -16,6 +17,7 @@ const {
   resendOtpSchema,
   verifyOtpSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } = require("../validations/auth.validation");
 const { protect } = require("../middlewares/authMiddleware");
 import { requireSuperadmin } from "../middlewares/roleMiddleware";
@@ -34,10 +36,16 @@ router.post("/login",rateLimiter, validateRequest(loginSchema), loginUser);
 
 router.post(
   "/register",
-  protect,
-  requireSuperadmin,
+  rateLimiter,
   validateRequest(registerSchema),
   registerUser,
+);
+
+router.post(
+  "/verify-email",
+  rateLimiter,
+  validateRequest(verifyEmailSchema),
+  verifyEmail,
 );
 
 // ======================== FORGOT PASSWORD ENDPOINTS ========================

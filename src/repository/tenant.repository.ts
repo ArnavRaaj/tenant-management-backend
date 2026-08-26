@@ -5,8 +5,8 @@ export const findTenantsRepo = async (filter: any) => {
   return await Tenant.find(filter).populate("flat", "flatNumber floor");
 };
 
-export const findTenantByIdRepo = async (id: string) => {
-  return await Tenant.findById(id).populate("flat", "flatNumber floor");
+export const findTenantByIdRepo = async (id: string, organizationId: string) => {
+  return await Tenant.findOne({ _id: id, organizationId }).populate("flat", "flatNumber floor");
 };
 
 export const createTenantRepo = async (data: any, session?: any) => {
@@ -17,8 +17,8 @@ export const createTenantRepo = async (data: any, session?: any) => {
   return await Tenant.create(data);
 };
 
-export const updateTenantRepo = async (id: string, data: any) => {
-  return await Tenant.findByIdAndUpdate(id, data, {
+export const updateTenantRepo = async (id: string, data: any, organizationId: string) => {
+  return await Tenant.findOneAndUpdate({ _id: id, organizationId }, data, {
     new: true,
     runValidators: true,
   });

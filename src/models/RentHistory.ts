@@ -29,6 +29,11 @@ const RentHistorySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    organizationId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     timestamps: true,

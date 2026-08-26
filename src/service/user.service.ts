@@ -4,11 +4,27 @@ import {
   findOneUserByEmail,
   findUserByEmail,
   findUserByEmailWithOtp,
+  findUserByEmailWithEmailVerificationOtp,
   saveUserDoc,
 } from "../repository/user.repository";
 import { AppError } from "../utils/AppError";
 
 const { generateToken } = require("../utils/helpers");
+
+const generateEmailVerificationOtp = async (user: any) => {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  user.emailVerificationOtp = otp;
+  user.emailVerificationOtpExpire = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+  await saveUserDoc(user);
+
+  console.log("\n===========================================");
+  console.log(`✉️ [EMAIL VERIFICATION OTP SENT]`);
+  console.log(`📧 Email: ${user.email}`);
+  console.log(`🔢 OTP:   ${otp}`);
+  console.log("===========================================\n");
+  
+  return otp;
+};
 
 export const registerUserService = async (req: Request) => {
   const { name, email, password } = req.body;
@@ -23,18 +39,37 @@ export const registerUserService = async (req: Request) => {
     throw new AppError("User already exists", 400);
   }
 
-  const user = await createUser(name, email, password);
+  const user = await createUser(name, email, password, "superadmin", null, false, null);
 
-  if (user) {
-    return {
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
-    };
-  } else {
-    throw new AppError("Invalid user data", 400);
+  await generateEmailVerificationOtp(user);
+
+  return { message: "Signup successful. Please verify your email with the OTP sent." };
+};
+
+export const verifyEmailService = async (req: Request) => {
+  const { email, otp } = req.body;
+  const user = await findUserByEmailWithEmailVerificationOtp(email);
+
+  if (!user || !user.emailVerificationOtp || user.emailVerificationOtp !== otp) {
+    throw new AppError("Invalid or incorrect OTP", 400);
   }
+
+  if (new Date(user.emailVerificationOtpExpire) < new Date()) {
+    throw new AppError("OTP has expired. Please request a new one.", 400);
+  }
+
+  user.isVerified = true;
+  user.emailVerificationOtp = undefined;
+  user.emailVerificationOtpExpire = undefined;
+  await saveUserDoc(user);
+
+  return {
+    _id: user.id,
+    name: user.name,
+    email: user.email,
+    token: generateToken(user._id),
+    role: user.role,
+  };
 };
 
 export const loginUserService = async (req: Request) => {
@@ -43,11 +78,15 @@ export const loginUserService = async (req: Request) => {
   const user = await findOneUserByEmail(email);
 
   if (user && (await user.matchPassword(password))) {
+    if (!user.isVerified) {
+      throw new AppError("Email not verified. Please verify your account.", 403);
+    }
     return {
       _id: user.id,
       name: user.name,
       email: user.email,
       token: generateToken(user._id),
+      role: user.role,
     };
   } else {
     throw new AppError("Invalid credentials", 401);

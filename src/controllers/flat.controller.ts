@@ -19,8 +19,8 @@ exports.getFlats = asyncHandler(async (req: Request) => {
 
 // @desc    Get all distinct building/apartment names (tags)
 // @route   GET /api/flats/tags
-exports.getBuildingTags = asyncHandler(async () => {
-  return await getBuildingTagsService();
+exports.getBuildingTags = asyncHandler(async (req: Request) => {
+  return await getBuildingTagsService(req);
 });
 
 // @desc    Get single flat

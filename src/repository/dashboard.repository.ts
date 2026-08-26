@@ -1,7 +1,9 @@
+import mongoose from "mongoose";
 const RentHistory = require("../models/RentHistory");
 
-export const aggregateMonthlyRentRepo = async () => {
+export const aggregateMonthlyRentRepo = async (organizationId: string) => {
   return await RentHistory.aggregate([
+    { $match: { organizationId: new mongoose.Types.ObjectId(organizationId) } },
     {
       $group: {
         _id: { month: "$rentMonth", year: "$rentYear" },
@@ -15,12 +17,14 @@ export const aggregateMonthlyRentRepo = async () => {
 export const aggregateFloorRentRepo = async (
   filterMonth: string,
   filterYear: number,
+  organizationId: string
 ) => {
   return await RentHistory.aggregate([
     {
       $match: {
         rentMonth: filterMonth,
         rentYear: filterYear,
+        organizationId: new mongoose.Types.ObjectId(organizationId),
       },
     },
     {

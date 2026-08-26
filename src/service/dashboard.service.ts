@@ -5,7 +5,8 @@ import {
 } from "../repository/dashboard.repository";
 
 export const getDashboardStatsService = async (req: Request) => {
-  const monthlyRent = await aggregateMonthlyRentRepo();
+  const organizationId = (req as any).organizationId;
+  const monthlyRent = await aggregateMonthlyRentRepo(organizationId);
 
   const currentMonthName = new Date().toLocaleString("default", {
     month: "long",
@@ -20,6 +21,7 @@ export const getDashboardStatsService = async (req: Request) => {
   const floorRent = await aggregateFloorRentRepo(
     filterMonth as string,
     filterYear as number,
+    organizationId
   );
 
   const floorMapping: { [key: number]: string } = {

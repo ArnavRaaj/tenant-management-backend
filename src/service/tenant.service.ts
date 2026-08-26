@@ -19,7 +19,8 @@ import {
 const { uploadImage } = require("../utils/cloudinary");
 
 export const getTenantsService = async (req: Request) => {
-  const filter: any = {};
+  const organizationId = (req as any).organizationId;
+  const filter: any = { organizationId };
   if (req.query.status === "past") filter.isActive = false;
   else filter.isActive = true;
 
@@ -30,7 +31,8 @@ export const getTenantsService = async (req: Request) => {
 };
 
 export const getTenantService = async (req: Request) => {
-  const tenant = await findTenantByIdRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
 
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
@@ -40,6 +42,7 @@ export const getTenantService = async (req: Request) => {
 };
 
 export const createTenantService = async (req: any) => {
+  const organizationId = req.organizationId;
   const {
     name,
     contactNumber,
@@ -59,7 +62,7 @@ export const createTenantService = async (req: any) => {
   session.startTransaction();
 
   try {
-    const flat = await getFlatRepo(flatId);
+    const flat = await getFlatRepo(flatId, organizationId);
     if (!flat) {
       throw new AppError("Flat not found", 404);
     }
@@ -93,6 +96,9 @@ export const createTenantService = async (req: any) => {
       isActive: true,
       dateOfRenting: dateOfRenting || Date.now(),
     });
+    
+    // Add organizationId unencrypted since it's a foreign key reference
+    tenantData.organizationId = organizationId;
 
     const tenant = await createTenantRepo(tenantData, session);
 
@@ -119,7 +125,8 @@ export const createTenantService = async (req: any) => {
 };
 
 export const updateTenantService = async (req: any) => {
-  let tenant = await findTenantByIdRepo(req.params.id as string);
+  const organizationId = req.organizationId;
+  let tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
   }
@@ -154,18 +161,19 @@ export const updateTenantService = async (req: any) => {
   }
   updateData.aadharImage = imageUrl;
 
-  tenant = await updateTenantRepo(req.params.id as string, updateData);
+  tenant = await updateTenantRepo(req.params.id as string, updateData, organizationId);
   return decryptTenantFields(tenant);
 };
 
 export const changeTenantService = async (req: Request) => {
-  const currentTenant = await findTenantByIdRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const currentTenant = await findTenantByIdRepo(req.params.id as string, organizationId);
   if (!currentTenant) {
     throw new AppError("Tenant not found", 404);
   }
 
   const flatId = currentTenant.flat._id;
-  const flat = await getFlatRepo(flatId);
+  const flat = await getFlatRepo(flatId, organizationId);
 
   currentTenant.isActive = false;
   currentTenant.vacatedDate = Date.now();
@@ -179,7 +187,8 @@ export const changeTenantService = async (req: Request) => {
 };
 
 export const addRentRecordService = async (req: Request) => {
-  const tenant = await findTenantByIdRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
   }
@@ -193,6 +202,7 @@ export const addRentRecordService = async (req: Request) => {
     paymentDate: paymentDate || Date.now(),
     rentMonth,
     rentYear,
+    organizationId,
   });
 
   const difference = tenant.monthlyRent - amountPaid;

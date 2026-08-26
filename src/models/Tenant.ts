@@ -63,6 +63,11 @@ const TenantSchema = new mongoose.Schema(
       ref: "Flat",
       required: true,
     },
+    organizationId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     timestamps: true,

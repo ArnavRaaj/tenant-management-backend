@@ -24,6 +24,11 @@ const FlatSchema = new mongoose.Schema(
       ref: "Address",
       default: null,
     },
+    organizationId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -23,7 +23,8 @@ const decryptFlatTenant = (flat: any): any => {
 };
 
 export const getFlatListService = async (req: Request) => {
-  const filter: any = {};
+  const organizationId = (req as any).organizationId;
+  const filter: any = { organizationId };
   if (req.query.status === "vacant") filter.currentTenant = null;
   if (req.query.status === "occupied") filter.currentTenant = { $ne: null };
   if (req.query.buildingName || req.query.tag) {
@@ -35,7 +36,8 @@ export const getFlatListService = async (req: Request) => {
 };
 
 export const getFlatService = async (req: Request) => {
-  const flat = await getFlatRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const flat = await getFlatRepo(req.params.id as string, organizationId);
 
   if (!flat) {
     throw new AppError("Flat not found", 404);
@@ -45,11 +47,13 @@ export const getFlatService = async (req: Request) => {
 };
 
 export const createFlatService = async (req: Request) => {
+  const organizationId = (req as any).organizationId;
   const { flatNumber, floor, buildingName, address } = req.body;
 
   const flatExists = await findOneFlatByNumberAndBuildingRepo(
     flatNumber,
     buildingName,
+    organizationId
   );
   if (flatExists) {
     throw new AppError(
@@ -58,17 +62,19 @@ export const createFlatService = async (req: Request) => {
     );
   }
 
-  const flat = await createFlatRepo(flatNumber, floor, buildingName, address);
+  const flat = await createFlatRepo(flatNumber, floor, buildingName, address, organizationId);
   return flat;
 };
 
-export const getBuildingTagsService = async () => {
-  const tags = await getDistinctBuildingNamesRepo();
+export const getBuildingTagsService = async (req: Request) => {
+  const organizationId = (req as any).organizationId;
+  const tags = await getDistinctBuildingNamesRepo(organizationId);
   return tags.sort();
 };
 
 export const deleteFlatService = async (req: Request) => {
-  const flat = await getFlatRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const flat = await getFlatRepo(req.params.id as string, organizationId);
 
   if (!flat) {
     throw new AppError("Flat not found", 404);
@@ -86,7 +92,8 @@ export const deleteFlatService = async (req: Request) => {
 };
 
 export const getFlatTenantHistoryService = async (req: Request) => {
-  const flat = await getFlatRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const flat = await getFlatRepo(req.params.id as string, organizationId);
   if (!flat) {
     throw new AppError("Flat not found", 404);
   }
@@ -96,7 +103,8 @@ export const getFlatTenantHistoryService = async (req: Request) => {
 };
 
 export const getFlatRevenueService = async (req: Request) => {
-  const flat = await getFlatRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const flat = await getFlatRepo(req.params.id as string, organizationId);
   if (!flat) {
     throw new AppError("Flat not found", 404);
   }
@@ -121,7 +129,8 @@ export const getFlatRevenueService = async (req: Request) => {
 };
 
 export const getFlatVacantHistoryService = async (req: Request) => {
-  const flat = await getFlatRepo(req.params.id as string);
+  const organizationId = (req as any).organizationId;
+  const flat = await getFlatRepo(req.params.id as string, organizationId);
   if (!flat) {
     throw new AppError("Flat not found", 404);
   }

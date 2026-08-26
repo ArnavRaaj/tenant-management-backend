@@ -11,8 +11,8 @@ export const getFlatListRepo = async (filter: any) => {
     .populate("address");
 };
 
-export const getFlatRepo = async (id: string) => {
-  return await Flat.findById(id)
+export const getFlatRepo = async (id: string, organizationId: string) => {
+  return await Flat.findOne({ _id: id, organizationId })
     .populate("currentTenant")
     .populate("address");
 };
@@ -20,27 +20,30 @@ export const getFlatRepo = async (id: string) => {
 export const findOneFlatByNumberAndBuildingRepo = async (
   flatNumber: string,
   buildingName: string,
+  organizationId: string
 ) => {
-  return await Flat.findOne({ flatNumber, buildingName });
+  return await Flat.findOne({ flatNumber, buildingName, organizationId });
 };
 
 export const createFlatRepo = async (
   flatNumber: string,
   floor: number,
   buildingName: string,
-  address?: string,
+  address: string | undefined,
+  organizationId: string
 ) => {
   const flat = await Flat.create({
     flatNumber,
     floor,
     buildingName,
     address: address || null,
+    organizationId,
   });
   return await flat.populate("address");
 };
 
-export const getDistinctBuildingNamesRepo = async () => {
-  return await Flat.distinct("buildingName");
+export const getDistinctBuildingNamesRepo = async (organizationId: string) => {
+  return await Flat.distinct("buildingName", { organizationId });
 };
 
 export const deleteFlatRepo = async (flat: any) => {

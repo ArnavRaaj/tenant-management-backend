@@ -7,6 +7,7 @@ import {
   verifyOtpService,
   registerUserService,
   resetPasswordService,
+  verifyEmailService,
 } from "../service/user.service";
 const { asyncHandler } = require("../utils/helpers");
 
@@ -14,6 +15,12 @@ const { asyncHandler } = require("../utils/helpers");
 // @route   POST /api/auth/register
 exports.registerUser = asyncHandler(async (req: Request) => {
   return await registerUserService(req);
+});
+
+// @desc    Verify email OTP
+// @route   POST /api/auth/verify-email
+exports.verifyEmail = asyncHandler(async (req: Request) => {
+  return await verifyEmailService(req);
 });
 
 // @desc    Authenticate a user

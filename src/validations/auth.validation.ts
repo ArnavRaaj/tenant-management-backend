@@ -21,10 +21,14 @@ export const registerSchema = {
       "string.email": "Please include a valid email",
       "any.required": "Email is required",
     }),
-    password: Joi.string().min(6).required().messages({
-      "string.min": "Please enter a password with 6 or more characters",
-      "any.required": "Password is required",
-    }),
+    password: Joi.string()
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        "any.required": "Password is required",
+      }),
   }),
 };
 
@@ -62,6 +66,22 @@ export const verifyOtpSchema = {
   }),
 };
 
+export const verifyEmailSchema = {
+  body: Joi.object({
+    email: Joi.string().email().required().messages({
+      "string.email": "Please include a valid email address",
+      "any.required": "Email is required",
+    }),
+    otp: Joi.string()
+      .pattern(/^\d{6}$/)
+      .required()
+      .messages({
+        "string.pattern.base": "OTP must be exactly 6 digits",
+        "any.required": "OTP is required",
+      }),
+  }),
+};
+
 export const resetPasswordSchema = {
   body: Joi.object({
     email: Joi.string().email().required().messages({
@@ -75,10 +95,14 @@ export const resetPasswordSchema = {
         "string.pattern.base": "OTP must be exactly 6 digits",
         "any.required": "OTP is required",
       }),
-    password: Joi.string().min(6).required().messages({
-      "string.min": "Please enter a password with 6 or more characters",
-      "any.required": "Password is required",
-    }),
+    password: Joi.string()
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+      .required()
+      .messages({
+        "string.pattern.base":
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        "any.required": "Password is required",
+      }),
     confirmPassword: Joi.string()
       .valid(Joi.ref("password"))
       .required()
