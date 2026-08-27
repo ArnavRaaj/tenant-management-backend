@@ -32,7 +32,7 @@ const rateLimiter = createTokenBucketLimiter({
 
 router.get("/me", protect, getMe);
 
-router.post("/login",rateLimiter, validateRequest(loginSchema), loginUser);
+router.post("/login", rateLimiter, validateRequest(loginSchema), loginUser);
 
 router.post(
   "/register",

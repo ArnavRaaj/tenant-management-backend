@@ -20,7 +20,7 @@ export const getFlatRepo = async (id: string, organizationId: string) => {
 export const findOneFlatByNumberAndBuildingRepo = async (
   flatNumber: string,
   buildingName: string,
-  organizationId: string
+  organizationId: string,
 ) => {
   return await Flat.findOne({ flatNumber, buildingName, organizationId });
 };
@@ -30,7 +30,7 @@ export const createFlatRepo = async (
   floor: number,
   buildingName: string,
   address: string | undefined,
-  organizationId: string
+  organizationId: string,
 ) => {
   const flat = await Flat.create({
     flatNumber,

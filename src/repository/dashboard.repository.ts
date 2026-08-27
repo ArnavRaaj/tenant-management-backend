@@ -17,7 +17,7 @@ export const aggregateMonthlyRentRepo = async (organizationId: string) => {
 export const aggregateFloorRentRepo = async (
   filterMonth: string,
   filterYear: number,
-  organizationId: string
+  organizationId: string,
 ) => {
   return await RentHistory.aggregate([
     {

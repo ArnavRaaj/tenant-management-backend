@@ -34,7 +34,7 @@ export const inviteAdminService = async (req: Request) => {
     "admin",
     superadminId,
     false, // isVerified
-    inviteToken
+    inviteToken,
   );
 
   const inviteLink = `${process.env.FRONTEND_URL || "http://localhost:3000"}/accept-invitation?email=${encodeURIComponent(email)}&token=${inviteToken}`;
@@ -76,6 +76,8 @@ export const acceptInvitationService = async (req: Request) => {
 
 export const getAdminsService = async (req: Request) => {
   const superadminId = (req as any).organizationId;
-  const admins = await User.find({ superadminId, role: "admin" }).select("-password -__v");
+  const admins = await User.find({ superadminId, role: "admin" }).select(
+    "-password -__v",
+  );
   return admins;
 };

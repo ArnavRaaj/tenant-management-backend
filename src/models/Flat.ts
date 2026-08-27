@@ -40,4 +40,3 @@ FlatSchema.index({ flatNumber: 1, buildingName: 1 }, { unique: true });
 FlatSchema.index({ currentTenant: 1 });
 
 module.exports = mongoose.model("Flat", FlatSchema);
-

@@ -11,18 +11,24 @@ const { asyncHandler } = require("../utils/helpers");
 
 // @desc    Invite a new admin (Superadmin only)
 // @route   POST /api/users/invite
-export const inviteAdmin = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await inviteAdminService(req);
-});
+export const inviteAdmin = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    return await inviteAdminService(req);
+  },
+);
 
 // @desc    Accept invitation and set password
 // @route   POST /api/users/accept-invitation
-export const acceptInvitation = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await acceptInvitationService(req);
-});
+export const acceptInvitation = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    return await acceptInvitationService(req);
+  },
+);
 
 // @desc    Get all admins under superadmin
 // @route   GET /api/users
-export const getAdmins = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  return await getAdminsService(req);
-});
+export const getAdmins = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    return await getAdminsService(req);
+  },
+);

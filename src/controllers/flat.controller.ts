@@ -58,4 +58,3 @@ exports.getFlatRevenue = asyncHandler(async (req: Request) => {
 exports.getFlatVacantHistory = asyncHandler(async (req: Request) => {
   return await getFlatVacantHistoryService(req);
 });
-

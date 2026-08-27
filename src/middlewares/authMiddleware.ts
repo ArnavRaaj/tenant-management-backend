@@ -27,8 +27,9 @@ const protect = asyncHandler(
           res.status(401).json({ message: "Not authorized, user not found" });
           return;
         }
-        
-        req.organizationId = req.user.role === 'superadmin' ? req.user._id : req.user.superadminId;
+
+        req.organizationId =
+          req.user.role === "superadmin" ? req.user._id : req.user.superadminId;
 
         // Log the action and proceed
         return auditLog(req, res, next);

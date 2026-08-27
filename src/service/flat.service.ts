@@ -53,7 +53,7 @@ export const createFlatService = async (req: Request) => {
   const flatExists = await findOneFlatByNumberAndBuildingRepo(
     flatNumber,
     buildingName,
-    organizationId
+    organizationId,
   );
   if (flatExists) {
     throw new AppError(
@@ -62,7 +62,13 @@ export const createFlatService = async (req: Request) => {
     );
   }
 
-  const flat = await createFlatRepo(flatNumber, floor, buildingName, address, organizationId);
+  const flat = await createFlatRepo(
+    flatNumber,
+    floor,
+    buildingName,
+    address,
+    organizationId,
+  );
   return flat;
 };
 

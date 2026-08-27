@@ -21,7 +21,7 @@ export const getDashboardStatsService = async (req: Request) => {
   const floorRent = await aggregateFloorRentRepo(
     filterMonth as string,
     filterYear as number,
-    organizationId
+    organizationId,
   );
 
   const floorMapping: { [key: number]: string } = {

@@ -8,7 +8,10 @@ const {
 const { protect } = require("../middlewares/authMiddleware");
 import { requireSuperadmin } from "../middlewares/roleMiddleware";
 import { validateRequest } from "../middlewares/validationMiddleware";
-import { inviteAdminSchema, acceptInvitationSchema } from "../validations/user.validation";
+import {
+  inviteAdminSchema,
+  acceptInvitationSchema,
+} from "../validations/user.validation";
 import { createTokenBucketLimiter } from "../middlewares/rateLimiter";
 
 const authLimiter = createTokenBucketLimiter({
@@ -23,7 +26,7 @@ router.post(
   protect,
   requireSuperadmin,
   validateRequest({ body: inviteAdminSchema }),
-  inviteAdmin
+  inviteAdmin,
 );
 router.get("/", protect, requireSuperadmin, getAdmins);
 
@@ -32,7 +35,7 @@ router.post(
   "/accept-invitation",
   authLimiter,
   validateRequest({ body: acceptInvitationSchema }),
-  acceptInvitation
+  acceptInvitation,
 );
 
 module.exports = router;

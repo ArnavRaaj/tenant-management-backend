@@ -22,7 +22,7 @@ const generateEmailVerificationOtp = async (user: any) => {
   console.log(`📧 Email: ${user.email}`);
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
-  
+
   return otp;
 };
 
@@ -39,18 +39,32 @@ export const registerUserService = async (req: Request) => {
     throw new AppError("User already exists", 400);
   }
 
-  const user = await createUser(name, email, password, "superadmin", null, false, null);
+  const user = await createUser(
+    name,
+    email,
+    password,
+    "superadmin",
+    null,
+    false,
+    null,
+  );
 
   await generateEmailVerificationOtp(user);
 
-  return { message: "Signup successful. Please verify your email with the OTP sent." };
+  return {
+    message: "Signup successful. Please verify your email with the OTP sent.",
+  };
 };
 
 export const verifyEmailService = async (req: Request) => {
   const { email, otp } = req.body;
   const user = await findUserByEmailWithEmailVerificationOtp(email);
 
-  if (!user || !user.emailVerificationOtp || user.emailVerificationOtp !== otp) {
+  if (
+    !user ||
+    !user.emailVerificationOtp ||
+    user.emailVerificationOtp !== otp
+  ) {
     throw new AppError("Invalid or incorrect OTP", 400);
   }
 
@@ -79,7 +93,10 @@ export const loginUserService = async (req: Request) => {
 
   if (user && (await user.matchPassword(password))) {
     if (!user.isVerified) {
-      throw new AppError("Email not verified. Please verify your account.", 403);
+      throw new AppError(
+        "Email not verified. Please verify your account.",
+        403,
+      );
     }
     return {
       _id: user.id,

@@ -7,7 +7,7 @@ export const createUser = async (
   role?: string,
   superadminId?: string | null,
   isVerified?: boolean,
-  inviteToken?: string | null
+  inviteToken?: string | null,
 ) => {
   return await User.create({
     name,
@@ -34,7 +34,9 @@ export const findUserByEmailWithOtp = async (email: string) => {
   );
 };
 
-export const findUserByEmailWithEmailVerificationOtp = async (email: string) => {
+export const findUserByEmailWithEmailVerificationOtp = async (
+  email: string,
+) => {
   return await User.findOne({ email }).select(
     "+emailVerificationOtp +emailVerificationOtpExpire +password",
   );

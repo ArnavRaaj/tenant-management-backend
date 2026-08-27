@@ -22,7 +22,9 @@ export const registerSchema = {
       "any.required": "Email is required",
     }),
     password: Joi.string()
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+      .pattern(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      )
       .required()
       .messages({
         "string.pattern.base":
@@ -96,7 +98,9 @@ export const resetPasswordSchema = {
         "any.required": "OTP is required",
       }),
     password: Joi.string()
-      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+      .pattern(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      )
       .required()
       .messages({
         "string.pattern.base":

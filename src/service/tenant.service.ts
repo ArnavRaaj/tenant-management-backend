@@ -32,7 +32,10 @@ export const getTenantsService = async (req: Request) => {
 
 export const getTenantService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
-  const tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
+  const tenant = await findTenantByIdRepo(
+    req.params.id as string,
+    organizationId,
+  );
 
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
@@ -96,7 +99,7 @@ export const createTenantService = async (req: any) => {
       isActive: true,
       dateOfRenting: dateOfRenting || Date.now(),
     });
-    
+
     // Add organizationId unencrypted since it's a foreign key reference
     tenantData.organizationId = organizationId;
 
@@ -126,7 +129,10 @@ export const createTenantService = async (req: any) => {
 
 export const updateTenantService = async (req: any) => {
   const organizationId = req.organizationId;
-  let tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
+  let tenant = await findTenantByIdRepo(
+    req.params.id as string,
+    organizationId,
+  );
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
   }
@@ -146,7 +152,10 @@ export const updateTenantService = async (req: any) => {
 
   // Encrypt sensitive fields from the request body
   const updateData = { ...req.body };
-  if (typeof updateData.address === "string" && updateData.address.trim().startsWith("{")) {
+  if (
+    typeof updateData.address === "string" &&
+    updateData.address.trim().startsWith("{")
+  ) {
     try {
       updateData.address = JSON.parse(updateData.address);
     } catch {
@@ -161,13 +170,20 @@ export const updateTenantService = async (req: any) => {
   }
   updateData.aadharImage = imageUrl;
 
-  tenant = await updateTenantRepo(req.params.id as string, updateData, organizationId);
+  tenant = await updateTenantRepo(
+    req.params.id as string,
+    updateData,
+    organizationId,
+  );
   return decryptTenantFields(tenant);
 };
 
 export const changeTenantService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
-  const currentTenant = await findTenantByIdRepo(req.params.id as string, organizationId);
+  const currentTenant = await findTenantByIdRepo(
+    req.params.id as string,
+    organizationId,
+  );
   if (!currentTenant) {
     throw new AppError("Tenant not found", 404);
   }
@@ -188,7 +204,10 @@ export const changeTenantService = async (req: Request) => {
 
 export const addRentRecordService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
-  const tenant = await findTenantByIdRepo(req.params.id as string, organizationId);
+  const tenant = await findTenantByIdRepo(
+    req.params.id as string,
+    organizationId,
+  );
   if (!tenant) {
     throw new AppError("Tenant not found", 404);
   }
