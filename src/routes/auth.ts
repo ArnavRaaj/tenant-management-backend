@@ -9,6 +9,7 @@ const {
   registerUser,
   resetPassword,
   verifyEmail,
+  resendVerifyEmail,
 } = require("../controllers/auth.controller");
 const {
   loginSchema,
@@ -20,12 +21,11 @@ const {
   verifyEmailSchema,
 } = require("../validations/auth.validation");
 const { protect } = require("../middlewares/authMiddleware");
-import { requireSuperadmin } from "../middlewares/roleMiddleware";
 import { createTokenBucketLimiter } from "../middlewares/rateLimiter";
 const { validateRequest } = require("../middlewares/validationMiddleware");
 
 const rateLimiter = createTokenBucketLimiter({
-  capacity: 3,
+  capacity: 5,
   refillRateSeconds: 60,
   keyPrefix: "otp_limit",
 });
@@ -46,6 +46,13 @@ router.post(
   rateLimiter,
   validateRequest(verifyEmailSchema),
   verifyEmail,
+);
+
+router.post(
+  "/resend-verify-email",
+  rateLimiter,
+  validateRequest(sendOtpSchema),
+  resendVerifyEmail,
 );
 
 // ======================== FORGOT PASSWORD ENDPOINTS ========================

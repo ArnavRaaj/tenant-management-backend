@@ -7,6 +7,7 @@ import {
   findUserByInviteToken,
   saveUserDoc,
 } from "../repository/user.repository";
+import { sendAdminInviteEmail } from "../utils/emailService";
 
 const User = require("../models/User");
 
@@ -27,7 +28,7 @@ export const inviteAdminService = async (req: Request) => {
   const inviteToken = crypto.randomBytes(32).toString("hex");
 
   // Create user as 'admin' under the current superadmin
-  const user = await createUser(
+  await createUser(
     name,
     email,
     undefined, // password will be set on accept
@@ -44,6 +45,9 @@ export const inviteAdminService = async (req: Request) => {
   console.log(`📧 Sent to: ${email}`);
   console.log(`🔗 Link: ${inviteLink}`);
   console.log("===========================================\n");
+
+  // Send real email invitation
+  await sendAdminInviteEmail(email, inviteLink);
 
   return { message: "Invitation sent successfully", inviteLink };
 };

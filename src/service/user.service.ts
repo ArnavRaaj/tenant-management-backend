@@ -8,6 +8,7 @@ import {
   saveUserDoc,
 } from "../repository/user.repository";
 import { AppError } from "../utils/AppError";
+import { sendOtpEmail } from "../utils/emailService";
 
 const { generateToken } = require("../utils/helpers");
 
@@ -22,6 +23,9 @@ const generateEmailVerificationOtp = async (user: any) => {
   console.log(`📧 Email: ${user.email}`);
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
+
+  // Send real email via configured SMTP / Resend
+  await sendOtpEmail(user.email, otp, "verification");
 
   return otp;
 };
@@ -53,6 +57,30 @@ export const registerUserService = async (req: Request) => {
 
   return {
     message: "Signup successful. Please verify your email with the OTP sent.",
+  };
+};
+
+export const resendEmailVerificationOtpService = async (req: Request) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Email is required", 400);
+  }
+
+  const user = await findUserByEmailWithEmailVerificationOtp(email);
+
+  if (!user) {
+    throw new AppError("No account found with this email", 404);
+  }
+
+  if (user.isVerified) {
+    throw new AppError("Account is already verified. Please sign in.", 400);
+  }
+
+  await generateEmailVerificationOtp(user);
+
+  return {
+    message: "A fresh verification code has been sent to your email.",
   };
 };
 
@@ -135,6 +163,9 @@ const generateAndSaveOtp = async (user: any, isResend: boolean = false) => {
   console.log(`📧 Email: ${user.email}`);
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
+
+  // Send real email via configured SMTP / Resend
+  await sendOtpEmail(user.email, otp, "forgot_password");
 
   return otp;
 };
