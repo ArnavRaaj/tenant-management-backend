@@ -6,6 +6,7 @@ const {
   createTenant,
   updateTenant,
   changeTenant,
+  vacateTenant,
   addRentRecord,
   getRentHistoryForTenant,
 } = require("../controllers/tenant.controller");
@@ -51,6 +52,14 @@ router.post(
   upload.single("aadharImage"),
   validateRequest(changeTenantSchema),
   changeTenant,
+);
+
+router.post(
+  "/:id/vacate",
+  protect,
+  requireSuperadmin,
+  validateRequest(tenantIdParamSchema),
+  vacateTenant,
 );
 
 router

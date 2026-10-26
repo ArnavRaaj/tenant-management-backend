@@ -202,6 +202,31 @@ export const changeTenantService = async (req: Request) => {
   return await createTenantService(req);
 };
 
+export const vacateTenantService = async (req: Request) => {
+  const organizationId = (req as any).organizationId;
+  const currentTenant = await findTenantByIdRepo(
+    req.params.id as string,
+    organizationId,
+  );
+  if (!currentTenant) {
+    throw new AppError("Tenant not found", 404);
+  }
+
+  const flatId = currentTenant.flat?._id || currentTenant.flat;
+  const flat = await getFlatRepo(flatId, organizationId);
+
+  currentTenant.isActive = false;
+  currentTenant.vacatedDate = Date.now();
+  await currentTenant.save();
+
+  if (flat) {
+    flat.currentTenant = null;
+    await flat.save();
+  }
+
+  return { message: "Tenant vacated successfully and flat is now vacant" };
+};
+
 export const addRentRecordService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
   const tenant = await findTenantByIdRepo(

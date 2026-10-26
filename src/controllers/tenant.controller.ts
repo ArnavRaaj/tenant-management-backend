@@ -5,6 +5,7 @@ import {
   createTenantService,
   updateTenantService,
   changeTenantService,
+  vacateTenantService,
   addRentRecordService,
   getRentHistoryForTenantService,
 } from "../service/tenant.service";
@@ -38,6 +39,12 @@ exports.updateTenant = asyncHandler(async (req: any) => {
 // @route   POST /api/tenants/:id/change
 exports.changeTenant = asyncHandler(async (req: Request) => {
   return await changeTenantService(req);
+});
+
+// @desc    Vacate tenant (Move out current, leave flat vacant)
+// @route   POST /api/tenants/:id/vacate
+exports.vacateTenant = asyncHandler(async (req: Request) => {
+  return await vacateTenantService(req);
 });
 
 // @desc    Add a rent payment record

@@ -6,12 +6,16 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const connectDB = require("./config/mongo.config");
+import { verifyEmailServiceConnection } from "./utils/emailService";
 
 // Load env vars
 dotenv.config();
 
 // Connect to database
 connectDB();
+
+// Verify email service configuration
+verifyEmailServiceConnection();
 
 const app = express();
 app.disable("etag"); // Disable ETags to prevent 304 Not Modified responses
