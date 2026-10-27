@@ -1,10 +1,5 @@
 import Joi from "joi";
-
-const objectId = Joi.string()
-  .regex(/^[0-9a-fA-F]{24}$/)
-  .messages({
-    "string.pattern.base": "Invalid ID format",
-  });
+import { objectIdSchema as objectId } from "./common.validation";
 
 export const getTenantsSchema = {
   query: Joi.object({

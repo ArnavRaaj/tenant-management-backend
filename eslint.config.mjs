@@ -10,7 +10,7 @@ export default tseslint.config(
       "@typescript-eslint/no-var-requires": "off",
       "@typescript-eslint/no-require-imports": "off",
       "no-undef": "off", // Handled by TS
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "no-useless-escape": "off"
     }
   }

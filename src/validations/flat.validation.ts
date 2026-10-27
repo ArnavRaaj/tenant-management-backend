@@ -1,11 +1,5 @@
 import Joi from "joi";
-
-// Regex for MongoDB ObjectId
-const objectId = Joi.string()
-  .regex(/^[0-9a-fA-F]{24}$/)
-  .messages({
-    "string.pattern.base": "Invalid ID format",
-  });
+import { objectIdSchema } from "./common.validation";
 
 export const getFlatsSchema = {
   query: Joi.object({
@@ -20,18 +14,21 @@ export const createFlatSchema = {
     flatNumber: Joi.string().required().messages({
       "any.required": "Flat number is required",
     }),
-    floor: Joi.number().required().messages({
-      "any.required": "Floor must be a number",
+    floor: Joi.number().integer().min(0).max(50).required().messages({
+      "number.base": "Floor must be a number",
+      "number.min": "Floor cannot be negative",
+      "number.max": "Floor number cannot exceed 50",
+      "any.required": "Floor is required",
     }),
     buildingName: Joi.string().required().messages({
       "any.required": "Building/Apartment name is required",
     }),
-    address: objectId.optional(),
+    address: objectIdSchema.optional(),
   }),
 };
 
 export const flatIdParamSchema = {
   params: Joi.object({
-    id: objectId.required(),
+    id: objectIdSchema.required(),
   }),
 };

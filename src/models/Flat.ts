@@ -35,8 +35,14 @@ const FlatSchema = new mongoose.Schema(
   },
 );
 
-// Same flat number can exist in different buildings, but not in the same building
-FlatSchema.index({ flatNumber: 1, buildingName: 1 }, { unique: true });
-FlatSchema.index({ currentTenant: 1 });
+// Multi-tenant unique index: Same flat number + building name is unique per organization
+FlatSchema.index(
+  { organizationId: 1, buildingName: 1, flatNumber: 1 },
+  { unique: true },
+);
+
+// Query optimization indexes
+FlatSchema.index({ organizationId: 1, currentTenant: 1 });
+FlatSchema.index({ organizationId: 1, buildingName: 1 });
 
 module.exports = mongoose.model("Flat", FlatSchema);

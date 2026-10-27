@@ -12,4 +12,4 @@ router.get(
   getDashboardStats,
 );
 
-module.exports = router;
+export default router;

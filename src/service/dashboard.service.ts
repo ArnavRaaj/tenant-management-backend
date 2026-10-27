@@ -3,6 +3,7 @@ import {
   aggregateMonthlyRentRepo,
   aggregateFloorRentRepo,
 } from "../repository/dashboard.repository";
+import { getFloorsService } from "./floor.service";
 
 export const getDashboardStatsService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
@@ -18,20 +19,25 @@ export const getDashboardStatsService = async (req: Request) => {
     ? parseInt(req.query.year as string)
     : currentYearNum;
 
-  const floorRent = await aggregateFloorRentRepo(
-    filterMonth as string,
-    filterYear as number,
-    organizationId,
-  );
+  const [floorRent, dbFloors] = await Promise.all([
+    aggregateFloorRentRepo(
+      filterMonth as string,
+      filterYear as number,
+      organizationId,
+    ),
+    getFloorsService(),
+  ]);
 
-  const floorMapping: { [key: number]: string } = {
-    0: "Ground Floor",
-    1: "First Floor",
-    2: "Second Floor",
-  };
+  // Dynamic floor mapping driven 100% by the database Floor collection
+  const floorNameMap = new Map<number, string>();
+  dbFloors.forEach((f: any) => {
+    floorNameMap.set(f.floorNumber, f.name);
+  });
 
   const formattedFloorRent = floorRent.map((f: any) => ({
-    floorStr: floorMapping[f._id],
+    floorStr:
+      floorNameMap.get(f._id) ||
+      (f._id === 0 ? "Ground Floor" : `Floor ${f._id}`),
     floorNum: f._id,
     totalRent: f.totalRent,
   }));

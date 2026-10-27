@@ -6,7 +6,9 @@
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts",
     "format": "prettier --write \"src/**/*.{js,ts}\"",
-    "lint:check": "eslint ."
+    "lint:check": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -38,11 +40,14 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^26.1.1",
     "@types/nodemailer": "^8.0.2",
+    "@types/supertest": "^7.2.1",
     "eslint": "^10.9.1",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.6",
+    "supertest": "^7.3.1",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.68.0"
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^5.0.5"
   }
 }

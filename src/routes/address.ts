@@ -6,7 +6,6 @@ const {
 } = require("../controllers/address.controller");
 import {
   createAddressSchema,
-  getAddressesSchema,
 } from "../validations/address.validation";
 const { protect } = require("../middlewares/authMiddleware");
 import { requireSuperadmin } from "../middlewares/roleMiddleware";
@@ -22,4 +21,4 @@ router
     createAddress,
   );
 
-module.exports = router;
+export default router;

@@ -11,10 +11,16 @@ export const getFlatListRepo = async (filter: any) => {
     .populate("address");
 };
 
-export const getFlatRepo = async (id: string, organizationId: string) => {
-  return await Flat.findOne({ _id: id, organizationId })
-    .populate("currentTenant")
-    .populate("address");
+export const getFlatRepo = async (
+  id: string,
+  organizationId: string,
+  session?: any,
+) => {
+  let query = Flat.findOne({ _id: id, organizationId });
+  if (session) {
+    query = query.session(session);
+  }
+  return await query.populate("currentTenant").populate("address");
 };
 
 export const findOneFlatByNumberAndBuildingRepo = async (

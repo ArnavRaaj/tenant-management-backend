@@ -8,7 +8,7 @@ import {
   saveUserDoc,
 } from "../repository/user.repository";
 import { AppError } from "../utils/AppError";
-import { sendOtpEmail } from "../utils/emailService";
+import { emailQueue } from "../queues/email.queue";
 
 const { generateToken } = require("../utils/helpers");
 
@@ -24,8 +24,8 @@ const generateEmailVerificationOtp = async (user: any) => {
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
 
-  // Send real email via configured SMTP / Resend
-  await sendOtpEmail(user.email, otp, "verification");
+  // Asynchronously dispatch email via background worker queue
+  emailQueue.enqueueOtpEmail(user.email, otp, "verification");
 
   return otp;
 };
@@ -105,6 +105,9 @@ export const verifyEmailService = async (req: Request) => {
   user.emailVerificationOtpExpire = undefined;
   await saveUserDoc(user);
 
+  // Send asynchronous welcome message via background queue
+  emailQueue.enqueueWelcomeEmail(user.email, user.name);
+
   return {
     _id: user.id,
     name: user.name,
@@ -164,8 +167,8 @@ const generateAndSaveOtp = async (user: any, isResend: boolean = false) => {
   console.log(`🔢 OTP:   ${otp}`);
   console.log("===========================================\n");
 
-  // Send real email via configured SMTP / Resend
-  await sendOtpEmail(user.email, otp, "forgot_password");
+  // Asynchronously dispatch email via background worker queue
+  emailQueue.enqueueOtpEmail(user.email, otp, "forgot_password");
 
   return otp;
 };

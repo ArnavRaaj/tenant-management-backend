@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request } from "express";
 import {
   inviteAdminService,
   acceptInvitationService,
@@ -12,7 +12,7 @@ const { asyncHandler } = require("../utils/helpers");
 // @desc    Invite a new admin (Superadmin only)
 // @route   POST /api/users/invite
 export const inviteAdmin = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request) => {
     return await inviteAdminService(req);
   },
 );
@@ -20,7 +20,7 @@ export const inviteAdmin = asyncHandler(
 // @desc    Accept invitation and set password
 // @route   POST /api/users/accept-invitation
 export const acceptInvitation = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request) => {
     return await acceptInvitationService(req);
   },
 );
@@ -28,7 +28,7 @@ export const acceptInvitation = asyncHandler(
 // @desc    Get all admins under superadmin
 // @route   GET /api/users
 export const getAdmins = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request) => {
     return await getAdminsService(req);
   },
 );

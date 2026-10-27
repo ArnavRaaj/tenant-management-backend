@@ -38,4 +38,4 @@ router.post(
   acceptInvitation,
 );
 
-module.exports = router;
+export default router;

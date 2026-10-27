@@ -72,4 +72,4 @@ router
     addRentRecord,
   );
 
-module.exports = router;
+export default router;

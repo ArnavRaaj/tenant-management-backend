@@ -7,7 +7,7 @@ import {
   findUserByInviteToken,
   saveUserDoc,
 } from "../repository/user.repository";
-import { sendAdminInviteEmail } from "../utils/emailService";
+import { emailQueue } from "../queues/email.queue";
 
 const User = require("../models/User");
 
@@ -46,8 +46,8 @@ export const inviteAdminService = async (req: Request) => {
   console.log(`🔗 Link: ${inviteLink}`);
   console.log("===========================================\n");
 
-  // Send real email invitation
-  await sendAdminInviteEmail(email, inviteLink);
+  // Asynchronously dispatch email invitation via background queue
+  emailQueue.enqueueAdminInvite(email, inviteLink);
 
   return { message: "Invitation sent successfully", inviteLink };
 };

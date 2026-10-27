@@ -83,4 +83,4 @@ router.post(
   resetPassword,
 );
 
-module.exports = router;
+export default router;

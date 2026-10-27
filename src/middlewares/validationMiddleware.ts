@@ -1,39 +1,70 @@
 import { Request, Response, NextFunction } from "express";
 import Joi from "joi";
+import { AppError } from "../utils/AppError";
+import { HttpStatus } from "../constants/httpStatus";
 
-export const validateRequest = (schema: {
+interface ValidationSchemaConfig {
   body?: Joi.ObjectSchema;
   query?: Joi.ObjectSchema;
   params?: Joi.ObjectSchema;
-}) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const { body, query, params } = schema;
+}
 
-    if (body) {
-      const { error } = body.validate(req.body, { abortEarly: false });
+const setRequestProperty = (
+  req: Request,
+  prop: "params" | "query" | "body",
+  value: any,
+) => {
+  Object.defineProperty(req, prop, {
+    value,
+    writable: true,
+    configurable: true,
+    enumerable: true,
+  });
+};
+
+export const validateRequest = (
+  schema: ValidationSchemaConfig | Joi.ObjectSchema,
+) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    // If a direct Joi schema is passed, treat it as body validation
+    const config: ValidationSchemaConfig =
+      Joi.isSchema(schema) ? { body: schema as Joi.ObjectSchema } : schema;
+
+    const { body, query, params } = config;
+
+    if (params) {
+      const { error, value } = params.validate(req.params, {
+        abortEarly: false,
+      });
       if (error) {
-        return res
-          .status(400)
-          .json({ message: error.details.map((x) => x.message).join(", ") });
+        const message = error.details.map((x) => x.message).join(", ");
+        return next(new AppError(message, HttpStatus.BAD_REQUEST));
       }
+      setRequestProperty(req, "params", value);
     }
 
     if (query) {
-      const { error } = query.validate(req.query, { abortEarly: false });
+      const { error, value } = query.validate(req.query, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
       if (error) {
-        return res
-          .status(400)
-          .json({ message: error.details.map((x) => x.message).join(", ") });
+        const message = error.details.map((x) => x.message).join(", ");
+        return next(new AppError(message, HttpStatus.BAD_REQUEST));
       }
+      setRequestProperty(req, "query", value);
     }
 
-    if (params) {
-      const { error } = params.validate(req.params, { abortEarly: false });
+    if (body) {
+      const { error, value } = body.validate(req.body, {
+        abortEarly: false,
+        allowUnknown: true, // Allow multipart fields like multer files
+      });
       if (error) {
-        return res
-          .status(400)
-          .json({ message: error.details.map((x) => x.message).join(", ") });
+        const message = error.details.map((x) => x.message).join(", ");
+        return next(new AppError(message, HttpStatus.BAD_REQUEST));
       }
+      setRequestProperty(req, "body", value);
     }
 
     next();

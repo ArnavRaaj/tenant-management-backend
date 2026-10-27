@@ -3,15 +3,15 @@ const jwt = require("jsonwebtoken");
 const asyncHandler =
   require("express-async-handler") || require("../utils/helpers").asyncHandler;
 const User = require("../models/User");
-import { auditLog } from "./auditMiddleware";
+import { UnauthorizedError } from "../utils/AppError";
 
 const protect = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-    let token;
+    let token: string | undefined;
 
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith("Bearer ")
     ) {
       try {
         // Get token from header
@@ -24,23 +24,20 @@ const protect = asyncHandler(
         req.user = await User.findById(decoded.id).select("-password");
 
         if (!req.user) {
-          res.status(401).json({ message: "Not authorized, user not found" });
-          return;
+          return next(new UnauthorizedError("Not authorized, user not found"));
         }
 
         req.organizationId =
           req.user.role === "superadmin" ? req.user._id : req.user.superadminId;
 
-        // Log the action and proceed
-        return auditLog(req, res, next);
-      } catch (error) {
-        console.error(error);
-        res.status(401).json({ message: "Not authorized, token failed" });
+        return next();
+      } catch {
+        return next(new UnauthorizedError("Not authorized, token failed or expired"));
       }
     }
 
     if (!token) {
-      res.status(401).json({ message: "Not authorized, no token" });
+      return next(new UnauthorizedError("Not authorized, no token provided"));
     }
   },
 );

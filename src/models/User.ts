@@ -57,6 +57,9 @@ const UserSchema = new mongoose.Schema(
   },
 );
 
+UserSchema.index({ superadminId: 1 });
+UserSchema.index({ role: 1 });
+
 // Encrypt password using bcrypt
 UserSchema.pre("save", async function (this: any) {
   if (!this.isModified("password") || !this.password) {

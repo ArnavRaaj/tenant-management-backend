@@ -29,8 +29,11 @@ router
     createFlat,
   );
 
+const { getFloors } = require("../controllers/floor.controller");
+
 // Static path avoids any conflict with /:id wildcard
 router.get("/meta/tags", protect, getBuildingTags);
+router.get("/meta/floors", protect, getFloors);
 
 router.get("/:id", protect, validateRequest(flatIdParamSchema), getFlat);
 router.delete(
@@ -67,4 +70,4 @@ router.get(
 
 // Vacancy periods for this flat
 
-module.exports = router;
+export default router;
