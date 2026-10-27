@@ -29,18 +29,30 @@ export const resolveEmailConfig = () => {
   const smtpHost = cleanString(process.env.SMTP_HOST);
   const smtpPortStr = cleanString(process.env.SMTP_PORT);
 
-  // Support SMTP_USER, GMAIL_USER, or GOOGLE_SMTP_USER
-  const smtpUser =
+  // Support SMTP_USER, GMAIL_USER, GOOGLE_SMTP_USER, EMAIL_USER, or extract from EMAIL_FROM
+  let smtpUser =
     cleanString(process.env.SMTP_USER) ||
     cleanString(process.env.GMAIL_USER) ||
-    cleanString(process.env.GOOGLE_SMTP_USER);
+    cleanString(process.env.GOOGLE_SMTP_USER) ||
+    cleanString(process.env.EMAIL_USER);
 
-  // Support SMTP_PASS, GMAIL_APP_PASSWORD, GMAIL_PASS, or GOOGLE_SMTP_PASS
+  if (!smtpUser && process.env.EMAIL_FROM) {
+    const emailMatch = process.env.EMAIL_FROM.match(
+      /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/,
+    );
+    if (emailMatch && emailMatch[1]) {
+      smtpUser = emailMatch[1].trim();
+    }
+  }
+
+  // Support SMTP_PASS, GMAIL_APP_PASSWORD, GMAIL_PASS, GOOGLE_SMTP_PASS, EMAIL_PASS, or ENMAIL_PASS
   const rawPass =
     process.env.SMTP_PASS ||
     process.env.GMAIL_APP_PASSWORD ||
     process.env.GMAIL_PASS ||
     process.env.GOOGLE_SMTP_PASS ||
+    process.env.EMAIL_PASS ||
+    process.env.ENMAIL_PASS ||
     "";
 
   // Google App Passwords often have spaces: "abcd efgh ijkl mnop" -> strip all whitespace
