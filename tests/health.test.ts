@@ -20,7 +20,7 @@ describe("Health & Request Tracing Middleware", () => {
   it("should attach X-Request-Id correlation header to all responses", async () => {
     const res = await request(app).get("/api/health");
     expect(res.headers["x-request-id"]).toBeDefined();
-    expect(res.headers["x-request-id"].length).toBeGreaterThan(0);
+    expect(res.headers["x-request-id"]?.length).toBeGreaterThan(0);
   });
 
   it("should preserve incoming X-Request-Id if provided by caller", async () => {
