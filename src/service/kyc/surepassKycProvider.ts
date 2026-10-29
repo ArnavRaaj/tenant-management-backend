@@ -34,12 +34,15 @@ export class SurepassKycProvider implements IKycProvider {
 
       const data: any = await response.json();
       if (response.ok && data && data.success) {
-        return {
+        const result: AadhaarOtpResponse = {
           success: true,
           clientId: data.data.client_id,
           message: data.message || "OTP dispatched to Aadhaar linked mobile number",
-          otpSentTo: data.data.otp_sent ? "UIDAI registered mobile" : undefined,
         };
+        if (data.data.otp_sent) {
+          result.otpSentTo = "UIDAI registered mobile";
+        }
+        return result;
       }
 
       throw new Error(data?.message || "Failed to generate Aadhaar OTP");
