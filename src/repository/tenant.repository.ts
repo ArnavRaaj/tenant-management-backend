@@ -17,6 +17,24 @@ export const findTenantByIdRepo = async (
   return await query.populate("flat", "flatNumber floor");
 };
 
+export const findTenantByKycTokenRepo = async (token: string) => {
+  return await Tenant.findOne({
+    kycToken: token,
+  }).populate("flat", "flatNumber floor buildingName");
+};
+
+export const updateTenantDirectRepo = async (
+  id: string,
+  data: any,
+  session?: any,
+) => {
+  return await Tenant.findByIdAndUpdate(id, data, {
+    new: true,
+    runValidators: true,
+    session,
+  });
+};
+
 export const createTenantRepo = async (data: any, session?: any) => {
   if (session) {
     const tenants = await Tenant.create([data], { session });
@@ -48,4 +66,17 @@ export const createRentHistoryRepo = async (data: any, session?: any) => {
 
 export const findRentHistoryByTenantRepo = async (tenantId: string) => {
   return await RentHistory.find({ tenant: tenantId }).sort({ paymentDate: -1 });
+};
+
+export const findCurrentMonthRentHistoryRepo = async (
+  organizationId: string,
+  rentMonth: string,
+  rentYear: number,
+) => {
+  const monthPrefix = rentMonth.substring(0, 3);
+  return await RentHistory.find({
+    organizationId,
+    rentYear,
+    rentMonth: { $regex: new RegExp(`^${monthPrefix}`, "i") },
+  }).select("tenant amountPaid rentMonth rentYear");
 };

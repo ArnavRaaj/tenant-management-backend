@@ -18,6 +18,9 @@ import addressRoutes from "./routes/address";
 import userRoutes from "./routes/user.routes";
 import auditRoutes from "./routes/audit.routes";
 import floorRoutes from "./routes/floor.routes";
+import kycRoutes from "./routes/kyc.routes";
+import maintenanceRoutes from "./routes/maintenance.routes";
+import whatsappRoutes from "./routes/whatsapp.routes";
 
 // Load env vars
 dotenv.config();
@@ -59,9 +62,12 @@ app.use("/api/addresses", addressRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/audit-logs", auditRoutes);
 app.use("/api/floors", floorRoutes);
+app.use("/api/kyc", kycRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Tenant Management API is running...");
+  res.send("Nivaasa (निवास) API Engine is running...");
 });
 
 app.get("/api/health", (_req: Request, res: Response) => {

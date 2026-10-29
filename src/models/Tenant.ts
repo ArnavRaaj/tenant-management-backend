@@ -54,6 +54,41 @@ const TenantSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    kycStatus: {
+      type: String,
+      enum: ["PENDING", "VERIFIED", "FAILED"],
+      default: "PENDING",
+    },
+    kycToken: {
+      type: String,
+      default: null,
+      index: true,
+    },
+    kycTokenExpires: {
+      type: Date,
+      default: null,
+    },
+    kycVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    kycClientId: {
+      type: String,
+      default: null,
+    },
+    paymentPattern: {
+      type: String,
+      enum: ["NEW", "ON_TIME", "MID_MONTH", "CHRONIC_LATE"],
+      default: "NEW",
+    },
+    lastPaidMonth: {
+      type: String,
+      default: null,
+    },
+    lastPaidYear: {
+      type: Number,
+      default: null,
+    },
     dateOfRenting: {
       type: Date,
       default: Date.now,

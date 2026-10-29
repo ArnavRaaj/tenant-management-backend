@@ -29,6 +29,24 @@ const RentHistorySchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    paymentMode: {
+      type: String,
+      enum: ["CASH", "DIRECT_UPI", "BANK_TRANSFER", "CHEQUE", "ONLINE_LINK"],
+      default: "CASH",
+    },
+    receiptNumber: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    referenceId: {
+      type: String,
+      default: "",
+    },
+    notes: {
+      type: String,
+      default: "",
+    },
     organizationId: {
       type: mongoose.Schema.ObjectId,
       ref: "User",

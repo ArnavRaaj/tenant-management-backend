@@ -58,3 +58,10 @@ exports.addRentRecord = asyncHandler(async (req: Request) => {
 exports.getRentHistoryForTenant = asyncHandler(async (req: Request) => {
   return await getRentHistoryForTenantService(req);
 });
+
+// @desc    Get or generate tenant onboarding KYC link
+// @route   GET /api/tenants/:id/kyc-link
+exports.getTenantKycLink = asyncHandler(async (req: Request) => {
+  const { getTenantKycLinkService } = require("../service/tenant.service");
+  return await getTenantKycLinkService(req);
+});

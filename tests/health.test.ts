@@ -6,7 +6,7 @@ describe("Health & Request Tracing Middleware", () => {
   it("should return 200 OK from root endpoint", async () => {
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
-    expect(res.text).toContain("Tenant Management API is running...");
+    expect(res.text).toContain("Nivaasa");
   });
 
   it("should return 200 OK with status and uptime from /api/health", async () => {
@@ -24,10 +24,10 @@ describe("Health & Request Tracing Middleware", () => {
   });
 
   it("should preserve incoming X-Request-Id if provided by caller", async () => {
-    const customTraceId = "client-trace-123456";
+    const customId = "trace-custom-uuid-12345";
     const res = await request(app)
       .get("/api/health")
-      .set("X-Request-Id", customTraceId);
-    expect(res.headers["x-request-id"]).toBe(customTraceId);
+      .set("X-Request-Id", customId);
+    expect(res.headers["x-request-id"]).toBe(customId);
   });
 });

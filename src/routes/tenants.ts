@@ -9,6 +9,7 @@ const {
   vacateTenant,
   addRentRecord,
   getRentHistoryForTenant,
+  getTenantKycLink,
 } = require("../controllers/tenant.controller");
 import {
   getTenantsSchema,
@@ -44,6 +45,13 @@ router
     validateRequest(updateTenantSchema),
     updateTenant,
   );
+
+router.get(
+  "/:id/kyc-link",
+  protect,
+  validateRequest(tenantIdParamSchema),
+  getTenantKycLink,
+);
 
 router.post(
   "/:id/change",

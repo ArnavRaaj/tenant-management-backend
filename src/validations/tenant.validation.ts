@@ -93,5 +93,10 @@ export const addRentRecordSchema = {
     rentMonth: Joi.string().required(),
     rentYear: Joi.number().required(),
     paymentDate: Joi.date().optional(),
+    paymentMode: Joi.string()
+      .valid("CASH", "DIRECT_UPI", "BANK_TRANSFER", "CHEQUE", "ONLINE_LINK")
+      .optional(),
+    referenceId: Joi.string().allow("").optional(),
+    notes: Joi.string().allow("").optional(),
   }),
 };
