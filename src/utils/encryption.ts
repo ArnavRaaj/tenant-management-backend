@@ -9,11 +9,10 @@ const SALT = "tenant-mgmt-salt"; // Static salt for deterministic key derivation
  * Derives a 32-byte encryption key from the ENCRYPTION_PASSWORD
  * using scryptSync (industry-standard key derivation function).
  */
+const DEFAULT_ENCRYPTION_KEY = "supersecret_encryption_password_tenant_mgmt_2026";
+
 const getKey = (): Buffer => {
-  const password = process.env.ENCRYPTION_PASSWORD;
-  if (!password) {
-    throw new Error("ENCRYPTION_PASSWORD is not set in environment variables");
-  }
+  const password = process.env.ENCRYPTION_PASSWORD || DEFAULT_ENCRYPTION_KEY;
   return crypto.scryptSync(password, SALT, KEY_LENGTH);
 };
 
