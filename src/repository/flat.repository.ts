@@ -8,7 +8,7 @@ export const getFlatListRepo = async (filter: any) => {
       path: "currentTenant",
       select: "name monthlyRent pendingBalance",
     })
-    .populate("address");
+    .populate("address").lean();
 };
 
 export const getFlatRepo = async (

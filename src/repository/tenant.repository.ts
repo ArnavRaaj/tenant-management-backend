@@ -2,7 +2,7 @@ const Tenant = require("../models/Tenant");
 const RentHistory = require("../models/RentHistory");
 
 export const findTenantsRepo = async (filter: any) => {
-  return await Tenant.find(filter).populate("flat", "flatNumber floor");
+  return await Tenant.find(filter).populate("flat", "flatNumber floor").lean();
 };
 
 export const findTenantByIdRepo = async (
@@ -78,5 +78,5 @@ export const findCurrentMonthRentHistoryRepo = async (
     organizationId,
     rentYear,
     rentMonth: { $regex: new RegExp(`^${monthPrefix}`, "i") },
-  }).select("tenant amountPaid rentMonth rentYear");
+  }).select("tenant amountPaid rentMonth rentYear").lean();
 };

@@ -19,7 +19,7 @@ export const findMaintenanceTicketsRepo = async (
     .skip(skip)
     .limit(limit)
     .populate("tenant", "name contactNumber kycStatus")
-    .populate("flat", "flatNumber floor buildingName");
+    .populate("flat", "flatNumber floor buildingName").lean();
 };
 
 export const countMaintenanceTicketsRepo = async (filter: any) => {
