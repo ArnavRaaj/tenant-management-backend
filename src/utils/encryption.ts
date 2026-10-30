@@ -8,12 +8,21 @@ const SALT = "tenant-mgmt-salt"; // Static salt for deterministic key derivation
 /**
  * Derives a 32-byte encryption key from the ENCRYPTION_PASSWORD
  * using scryptSync (industry-standard key derivation function).
+ *
+ * CRITICAL PERF FIX: The derived key is cached at module level because the
+ * password and salt are constant for the lifetime of the process.
+ * scryptSync is deliberately CPU-intensive (~100-500ms per call).
+ * Without caching, decrypting 20 tenants × 4 fields = 80 calls = 8-40s blocking.
  */
 const DEFAULT_ENCRYPTION_KEY = "supersecret_encryption_password_tenant_mgmt_2026";
 
+let _cachedKey: Buffer | null = null;
+
 const getKey = (): Buffer => {
+  if (_cachedKey) return _cachedKey;
   const password = process.env.ENCRYPTION_PASSWORD || DEFAULT_ENCRYPTION_KEY;
-  return crypto.scryptSync(password, SALT, KEY_LENGTH);
+  _cachedKey = crypto.scryptSync(password, SALT, KEY_LENGTH);
+  return _cachedKey;
 };
 
 /**

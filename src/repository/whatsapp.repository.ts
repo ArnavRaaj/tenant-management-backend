@@ -55,7 +55,8 @@ export const findTenantByPhoneNumberRepo = async (rawPhone: string) => {
   // Retrieve active tenants with populated flat and organization
   const activeTenants = await Tenant.find({ isActive: true })
     .populate("flat", "flatNumber floor buildingName")
-    .populate("organizationId", "name email");
+    .populate("organizationId", "name email")
+    .lean();
 
   for (const tenantDoc of activeTenants) {
     const decrypted = decryptTenantFields(tenantDoc);

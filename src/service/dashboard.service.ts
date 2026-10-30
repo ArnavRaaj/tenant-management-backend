@@ -7,7 +7,6 @@ import { getFloorsService } from "./floor.service";
 
 export const getDashboardStatsService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
-  const monthlyRent = await aggregateMonthlyRentRepo(organizationId);
 
   const currentMonthName = new Date().toLocaleString("default", {
     month: "long",
@@ -19,7 +18,9 @@ export const getDashboardStatsService = async (req: Request) => {
     ? parseInt(req.query.year as string)
     : currentYearNum;
 
-  const [floorRent, dbFloors] = await Promise.all([
+  // Run all 3 aggregation queries in parallel
+  const [monthlyRent, floorRent, dbFloors] = await Promise.all([
+    aggregateMonthlyRentRepo(organizationId),
     aggregateFloorRentRepo(
       filterMonth as string,
       filterYear as number,

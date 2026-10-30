@@ -65,7 +65,7 @@ export const createRentHistoryRepo = async (data: any, session?: any) => {
 };
 
 export const findRentHistoryByTenantRepo = async (tenantId: string) => {
-  return await RentHistory.find({ tenant: tenantId }).sort({ paymentDate: -1 });
+  return await RentHistory.find({ tenant: tenantId }).sort({ paymentDate: -1 }).lean();
 };
 
 export const findCurrentMonthRentHistoryRepo = async (

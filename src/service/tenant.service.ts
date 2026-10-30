@@ -39,19 +39,17 @@ export const getTenantsService = async (req: Request) => {
 
   if (req.query.rentDue === "true") filter.pendingBalance = { $gt: 0 };
 
-  const tenants = await findTenantsRepo(filter);
-
   // Compute whether current month rent has been received
   const now = new Date();
   const currentMonth = now.toLocaleString("en-US", { month: "long" });
   const currentYear = now.getFullYear();
   const monthPrefix = currentMonth.substring(0, 3).toLowerCase();
 
-  const currentMonthRecords = await findCurrentMonthRentHistoryRepo(
-    organizationId,
-    currentMonth,
-    currentYear,
-  );
+  // Run both DB queries in parallel instead of sequentially
+  const [tenants, currentMonthRecords] = await Promise.all([
+    findTenantsRepo(filter),
+    findCurrentMonthRentHistoryRepo(organizationId, currentMonth, currentYear),
+  ]);
   const paidTenantIds = new Set(
     currentMonthRecords.map((r: any) => r.tenant?.toString()),
   );
@@ -76,27 +74,23 @@ export const getTenantsService = async (req: Request) => {
 
 export const getTenantService = async (req: Request) => {
   const organizationId = (req as any).organizationId;
-  const tenant = await findTenantByIdRepo(
-    req.params.id as string,
-    organizationId,
-  );
-
-  if (!tenant) {
-    throw new NotFoundError("Tenant not found");
-  }
-
-  const decrypted = decryptTenantFields(tenant);
 
   const now = new Date();
   const currentMonth = now.toLocaleString("en-US", { month: "long" });
   const currentYear = now.getFullYear();
   const monthPrefix = currentMonth.substring(0, 3).toLowerCase();
 
-  const currentMonthRecords = await findCurrentMonthRentHistoryRepo(
-    organizationId,
-    currentMonth,
-    currentYear,
-  );
+  // Run both DB queries in parallel
+  const [tenant, currentMonthRecords] = await Promise.all([
+    findTenantByIdRepo(req.params.id as string, organizationId),
+    findCurrentMonthRentHistoryRepo(organizationId, currentMonth, currentYear),
+  ]);
+
+  if (!tenant) {
+    throw new NotFoundError("Tenant not found");
+  }
+
+  const decrypted = decryptTenantFields(tenant);
   const tenantIdStr = (decrypted._id || decrypted.id)?.toString();
   const isPaidInHistory = currentMonthRecords.some(
     (r: any) => r.tenant?.toString() === tenantIdStr,

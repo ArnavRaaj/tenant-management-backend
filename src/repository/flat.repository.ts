@@ -20,7 +20,7 @@ export const getFlatRepo = async (
   if (session) {
     query = query.session(session);
   }
-  return await query.populate("currentTenant").populate("address");
+  return await query.populate("currentTenant").populate("address").lean();
 };
 
 export const findOneFlatByNumberAndBuildingRepo = async (
