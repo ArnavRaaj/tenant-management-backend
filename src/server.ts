@@ -1,95 +1,101 @@
-import express, { Request, Response, NextFunction } from "express";
-import crypto from "crypto";
-import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
-import dotenv from "dotenv";
-import connectDB from "./config/mongo.config";
-import { verifyEmailServiceConnection } from "./utils/emailService";
-import { responseMiddleware } from "./middlewares/responseMiddleware";
-import { errorMiddleware } from "./middlewares/errorMiddleware";
-import { auditLog } from "./middlewares/auditMiddleware";
+import type { Server } from "http";
+import { app } from "./app";
+import { config } from "./config/env";
+import {
+  connectDatabase,
+  disconnectDatabase,
+  ensureIndexes,
+} from "./config/database";
+import { closeRedis } from "./config/redis";
+import { logger } from "./core/logger";
+import { startJobQueue, stopJobQueue } from "./core/queue/jobQueue";
+import {
+  startAuditWriter,
+  stopAuditWriter,
+} from "./modules/audit/audit.writer";
+import {
+  closeEmailTransport,
+  verifyEmailTransport,
+} from "./modules/notifications/email.service";
+import { pendingMigrations } from "./scripts/migrations/runner";
 
-import authRoutes from "./routes/auth";
-import flatRoutes from "./routes/flats";
-import tenantRoutes from "./routes/tenants";
-import dashboardRoutes from "./routes/dashboard";
-import addressRoutes from "./routes/address";
-import userRoutes from "./routes/user.routes";
-import auditRoutes from "./routes/audit.routes";
-import floorRoutes from "./routes/floor.routes";
-import kycRoutes from "./routes/kyc.routes";
-import maintenanceRoutes from "./routes/maintenance.routes";
-import whatsappRoutes from "./routes/whatsapp.routes";
+const SHUTDOWN_TIMEOUT_MS = 15_000;
+let server: Server | null = null;
+let shuttingDown = false;
 
-// Load env vars
-dotenv.config();
+const shutdown = async (signal: string, exitCode = 0): Promise<void> => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info({ signal }, "Shutting down gracefully");
 
-// Connect to database and verify email connection (only in non-test mode)
-if (process.env.NODE_ENV !== "test") {
-  connectDB();
-  verifyEmailServiceConnection();
-}
+  const force = setTimeout(() => {
+    logger.fatal("Graceful shutdown timed out; forcing exit");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  force.unref();
 
-const app = express();
-app.disable("etag"); // Disable ETags to prevent 304 Not Modified responses
-
-// Request Correlation ID Middleware (Industry standard for tracing & audit)
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const incomingId = req.headers["x-request-id"] as string;
-  const requestId = incomingId || crypto.randomUUID();
-  req.headers["x-request-id"] = requestId;
-  res.setHeader("X-Request-Id", requestId);
-  next();
-});
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cors());
-app.use(helmet());
-app.use(morgan("dev"));
-
-// Non-blocking Database Audit Logging Middleware (Who, When, What)
-app.use(auditLog);
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/flats", flatRoutes);
-app.use("/api/tenants", tenantRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/addresses", addressRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/audit-logs", auditRoutes);
-app.use("/api/floors", floorRoutes);
-app.use("/api/kyc", kycRoutes);
-app.use("/api/maintenance", maintenanceRoutes);
-app.use("/api/whatsapp", whatsappRoutes);
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("Nivaasa (निवास) API Engine is running...");
-});
-
-app.get("/api/health", (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Post-route Middlewares
-app.use(responseMiddleware);
-app.use(errorMiddleware);
-
-const PORT = process.env.PORT || 5000;
-
-if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    console.log(
-      `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`,
+  try {
+    // 1. Stop accepting connections; let in-flight requests finish.
+    await new Promise<void>((resolve) =>
+      server ? server.close(() => resolve()) : resolve(),
     );
-  });
-}
+    // 2. Drain background work and buffered audit logs.
+    await stopJobQueue();
+    await stopAuditWriter();
+    closeEmailTransport();
+    // 3. Close shared connections.
+    await closeRedis();
+    await disconnectDatabase();
+    logger.info("Shutdown complete");
+  } catch (err) {
+    logger.error({ err }, "Error during shutdown");
+    exitCode = 1;
+  }
+  process.exit(exitCode);
+};
 
-export { app };
+const bootstrap = async (): Promise<void> => {
+  // The DB must be reachable before we accept traffic.
+  await connectDatabase();
+
+  const pending = await pendingMigrations();
+  if (pending.length > 0) {
+    const message = `Pending database migrations: ${pending.join(", ")}. Run "npm run migrate".`;
+    if (config.isProduction) throw new Error(message);
+    logger.error(message);
+  } else if (!config.isProduction) {
+    // Dev convenience: build declared indexes — only once data is migrated,
+    // otherwise new unique indexes could reject legacy data.
+    await ensureIndexes();
+  }
+
+  startJobQueue();
+  startAuditWriter();
+  void verifyEmailTransport();
+
+  server = app.listen(config.port, () =>
+    logger.info(
+      { port: config.port, env: config.nodeEnv },
+      "API server listening",
+    ),
+  );
+  // Slightly above typical load-balancer idle timeouts to avoid 502s on reuse.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
+  server.requestTimeout = 30_000;
+};
+
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("unhandledRejection", (reason) => {
+  logger.error({ err: reason }, "Unhandled promise rejection");
+});
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err }, "Uncaught exception — exiting");
+  void shutdown("uncaughtException", 1);
+});
+
+bootstrap().catch((err) => {
+  logger.fatal({ err }, "Failed to start server");
+  process.exit(1);
+});

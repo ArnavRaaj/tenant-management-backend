@@ -1,35 +1,26 @@
-# Multi-stage production build for backend
-FROM node:20-alpine AS builder
-
+# ── Build stage: compile TypeScript to dist/ ─────────────────────────────────
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy package descriptors
 COPY package*.json ./
-
-# Install all dependencies including devDependencies for TypeScript compilation
 RUN npm ci
+COPY tsconfig.json tsconfig.build.json ./
+COPY src ./src
+RUN npm run build
 
-# Copy source code and config
-COPY . .
-
-# Multi-stage runner image
-FROM node:20-alpine AS runner
-
+# ── Runtime stage: production dependencies + compiled JS only ────────────────
+FROM node:22-alpine AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
-
-# Install only production dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && npm cache clean --force
+COPY --from=builder /app/dist ./dist
 
-# Copy tsx and source files
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/tsconfig.json ./
-
-# Run with unprivileged user for security
+# Run as the unprivileged "node" user
 USER node
-
 EXPOSE 5000
 
-CMD ["npx", "tsx", "src/server.ts"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:5000/api/health || exit 1
+
+# Run migrations as a separate release step: `docker compose run --rm backend npm run migrate`
+CMD ["node", "dist/server.js"]
