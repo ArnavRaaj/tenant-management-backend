@@ -74,6 +74,8 @@ export interface AppConfig {
 
   kyc: {
     provider: "mock" | "surepass";
+    /** True when verifications come from the built-in simulator. */
+    simulated: boolean;
     surepassToken: string;
     surepassBaseUrl: string;
   };
@@ -91,6 +93,8 @@ export interface AppConfig {
   };
 
   externalHttpTimeoutMs: number;
+  /** Optional integrations running on built-in fallbacks (logged at startup). */
+  fallbacks: string[];
   auditRetentionDays: number;
   whatsappLogRetentionDays: number;
 }
@@ -294,26 +298,77 @@ export const loadConfig = (
     env.CLOUDINARY_CLOUD_NAME !== "your_cloudinary_cloud_name",
   );
 
+  // ── Optional integrations: degrade gracefully instead of refusing to boot ──
+  // Security-critical secrets above stay mandatory; third-party integrations
+  // below fall back to safe built-in implementations and are reported at
+  // startup (see `fallbacks`) so the operator knows what is simulated.
+  const fallbacks: string[] = [];
+
   const surepassToken: string = env.SUREPASS_API_TOKEN || "";
+  const requestedKyc: "mock" | "surepass" =
+    env.KYC_PROVIDER || (surepassToken ? "surepass" : "mock");
   const kycProvider: "mock" | "surepass" =
-    env.KYC_PROVIDER || (isProduction ? "surepass" : "mock");
-  if (kycProvider === "surepass" && !surepassToken && isProduction) {
-    fail("SUREPASS_API_TOKEN is required when KYC_PROVIDER=surepass");
-  }
+    requestedKyc === "surepass" && surepassToken ? "surepass" : "mock";
   if (kycProvider === "mock" && isProduction) {
-    fail("KYC_PROVIDER=mock is not allowed in production");
+    fallbacks.push(
+      requestedKyc === "surepass"
+        ? "KYC: SUREPASS_API_TOKEN missing → simulated Aadhaar e-KYC (verifications are marked as simulated)"
+        : "KYC: simulated Aadhaar e-KYC (verifications are marked as simulated)",
+    );
   }
 
-  const whatsappProvider: "simulator" | "meta" = env.WHATSAPP_PROVIDER;
-  const webhookVerifyToken = isProduction
-    ? requireInProd(
-        "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
-        env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
-      )
-    : env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || "nivaasa_whatsapp_verify_token_dev";
+  const phoneNumberId: string = env.WHATSAPP_PHONE_NUMBER_ID || "";
+  const waAccessToken: string = env.WHATSAPP_ACCESS_TOKEN || "";
+  const requestedWa: "simulator" | "meta" = env.WHATSAPP_PROVIDER;
+  const whatsappProvider: "simulator" | "meta" =
+    requestedWa === "meta" && phoneNumberId && waAccessToken
+      ? "meta"
+      : "simulator";
+  if (requestedWa === "meta" && whatsappProvider === "simulator") {
+    fallbacks.push(
+      "WhatsApp: Meta credentials missing → messages are logged, not sent",
+    );
+  } else if (whatsappProvider === "simulator" && isProduction) {
+    fallbacks.push("WhatsApp: simulator mode → messages are logged, not sent");
+  }
+
+  let webhookVerifyToken: string = env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || "";
+  if (!webhookVerifyToken) {
+    // Random per boot: the Meta webhook handshake simply cannot succeed
+    // until a real token is configured — but nothing else is affected.
+    webhookVerifyToken = isProduction
+      ? crypto.randomBytes(24).toString("hex")
+      : "nivaasa_whatsapp_verify_token_dev";
+    if (isProduction)
+      fallbacks.push(
+        "WhatsApp webhook: WHATSAPP_WEBHOOK_VERIFY_TOKEN missing → webhook disabled",
+      );
+  }
   const appSecret: string = env.WHATSAPP_APP_SECRET || "";
   if (isProduction && whatsappProvider === "meta" && !appSecret) {
-    fail("WHATSAPP_APP_SECRET is required to verify Meta webhook signatures");
+    fallbacks.push(
+      "WhatsApp webhook: WHATSAPP_APP_SECRET missing → inbound webhooks are rejected",
+    );
+  }
+
+  if (!env.REDIS_URL && isProduction) {
+    fallbacks.push(
+      "Redis: REDIS_URL missing → in-process rate limits, cache and job queue (run a single instance)",
+    );
+  }
+  if (!cloudinaryEnabled && isProduction) {
+    fallbacks.push(
+      "Storage: Cloudinary not configured → document uploads return 503",
+    );
+  }
+
+  const hasEmailTransport = Boolean(
+    env.RESEND_API_KEY || (env.SMTP_USER && env.SMTP_PASS),
+  );
+  if (!hasEmailTransport && isProduction) {
+    fallbacks.push(
+      "Email: no SMTP/Resend credentials → OTP and invite emails cannot be delivered",
+    );
   }
 
   const sameSite: SameSiteOption =
@@ -377,8 +432,8 @@ export const loadConfig = (
     },
 
     kyc: {
-      provider:
-        kycProvider === "surepass" && surepassToken ? "surepass" : "mock",
+      provider: kycProvider,
+      simulated: kycProvider === "mock",
       surepassToken,
       surepassBaseUrl: env.SUREPASS_BASE_URL,
     },
@@ -387,8 +442,8 @@ export const loadConfig = (
 
     whatsapp: {
       provider: whatsappProvider,
-      phoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID || "",
-      accessToken: env.WHATSAPP_ACCESS_TOKEN || "",
+      phoneNumberId,
+      accessToken: waAccessToken,
       apiVersion: env.WHATSAPP_API_VERSION,
       webhookVerifyToken,
       appSecret,
@@ -397,6 +452,7 @@ export const loadConfig = (
     },
 
     externalHttpTimeoutMs: env.EXTERNAL_HTTP_TIMEOUT_MS,
+    fallbacks,
     auditRetentionDays: env.AUDIT_RETENTION_DAYS,
     whatsappLogRetentionDays: env.WHATSAPP_LOG_RETENTION_DAYS,
   };

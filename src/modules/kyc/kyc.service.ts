@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { config } from "../../config/env";
 import {
   ConflictError,
   ErrorCode,
@@ -58,6 +59,8 @@ export const getKycInfo = async (token: string) => {
     ...flatInfo(tenant),
     kycStatus: tenant.kycStatus,
     expiresAt: tenant.kycTokenExpires,
+    // Lets the page warn that no real Aadhaar check happens in demo mode.
+    simulated: config.kyc.simulated,
   };
 };
 
@@ -96,6 +99,7 @@ export const submitKycOtp = async (token: string, otp: string) => {
     kycTokenEnc: null,
     kycTokenExpires: null,
     kycClientId: null,
+    kycProvider: config.kyc.provider,
     // UIDAI returns only a masked number; that is all we keep.
     aadhaarMasked: verified.maskedAadhaar,
   };
@@ -119,7 +123,10 @@ export const submitKycOtp = async (token: string, otp: string) => {
     after: { kycStatus: "VERIFIED" },
   });
   return {
-    message: "Aadhaar e-KYC verified successfully!",
+    message: config.kyc.simulated
+      ? "Demo verification completed (no real Aadhaar check was performed)."
+      : "Aadhaar e-KYC verified successfully!",
+    simulated: config.kyc.simulated,
     verifiedData: {
       tenantName: tenant.name,
       maskedAadhar: verified.maskedAadhaar,

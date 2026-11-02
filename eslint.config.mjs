@@ -16,7 +16,22 @@ export default tseslint.config(
       ],
       "no-undef": "off", // Handled by TypeScript
       "no-console": "error", // Use the pino logger (src/core/logger.ts)
+      // All environment variables are read and validated in src/config/env.ts.
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "process",
+          property: "env",
+          message: "Import `config` from src/config/env.ts instead of reading process.env directly.",
+        },
+      ],
     },
+  },
+  {
+    // The config module itself, and test bootstrapping that must prepare the
+    // environment BEFORE the config module loads.
+    files: ["src/config/env.ts", "tests/helpers/**/*.ts"],
+    rules: { "no-restricted-properties": "off" },
   },
   {
     // Tests may use loose typing for fixtures and mocks.

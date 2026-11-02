@@ -69,6 +69,13 @@ const bootstrap = async (): Promise<void> => {
     await ensureIndexes();
   }
 
+  if (config.fallbacks.length > 0) {
+    logger.warn(
+      { fallbacks: config.fallbacks },
+      "Optional integrations not configured — running on built-in fallbacks",
+    );
+  }
+
   startJobQueue();
   startAuditWriter();
   void verifyEmailTransport();

@@ -45,6 +45,8 @@ export interface TenantDto {
   vacatedDate: Date | null;
   kycStatus: TenantDoc["kycStatus"];
   kycVerifiedAt: Date | null;
+  /** True when KYC was completed with the simulated (demo) provider. */
+  kycSimulated: boolean;
   paymentPattern: TenantDoc["paymentPattern"];
   lastPaidMonth: string | null;
   lastPaidYear: number | null;
@@ -94,6 +96,7 @@ export const toTenantDto = (
     vacatedDate: t.vacatedDate ?? null,
     kycStatus: t.kycStatus,
     kycVerifiedAt: t.kycVerifiedAt ?? null,
+    kycSimulated: t.kycStatus === "VERIFIED" && t.kycProvider === "mock",
     paymentPattern: t.paymentPattern,
     lastPaidMonth: t.lastPaidPeriod
       ? monthName(periodMonth(t.lastPaidPeriod))

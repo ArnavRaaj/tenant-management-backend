@@ -124,23 +124,19 @@ describe("WhatsApp webhook, simulator and logs", () => {
   });
 
   it("verifies the Meta subscription handshake with a constant-time token check", async () => {
-    const ok = await api()
-      .get("/api/whatsapp/webhook")
-      .query({
-        "hub.mode": "subscribe",
-        "hub.verify_token": "test-verify-token",
-        "hub.challenge": "c123",
-      });
+    const ok = await api().get("/api/whatsapp/webhook").query({
+      "hub.mode": "subscribe",
+      "hub.verify_token": "test-verify-token",
+      "hub.challenge": "c123",
+    });
     expect(ok.status).toBe(200);
     expect(ok.text).toBe("c123");
 
-    const bad = await api()
-      .get("/api/whatsapp/webhook")
-      .query({
-        "hub.mode": "subscribe",
-        "hub.verify_token": "wrong",
-        "hub.challenge": "c123",
-      });
+    const bad = await api().get("/api/whatsapp/webhook").query({
+      "hub.mode": "subscribe",
+      "hub.verify_token": "wrong",
+      "hub.challenge": "c123",
+    });
     expect(bad.status).toBe(403);
   });
 

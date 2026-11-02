@@ -269,26 +269,20 @@ describe("Flats", () => {
   it("rejects an address belonging to another organisation", async () => {
     const a = await createSuperadmin();
     const b = await createSuperadmin();
-    const addr = await api()
-      .post("/api/addresses")
-      .set(b.auth)
-      .send({
-        addressLine1: "1 MG Road",
-        city: "Pune",
-        postalCode: "411001",
-        state: "Maharashtra",
-      });
+    const addr = await api().post("/api/addresses").set(b.auth).send({
+      addressLine1: "1 MG Road",
+      city: "Pune",
+      postalCode: "411001",
+      state: "Maharashtra",
+    });
     expect(addr.status).toBe(201);
 
-    const res = await api()
-      .post("/api/flats")
-      .set(a.auth)
-      .send({
-        flatNumber: "9",
-        floor: 0,
-        buildingName: "X",
-        address: addr.body.data._id,
-      });
+    const res = await api().post("/api/flats").set(a.auth).send({
+      flatNumber: "9",
+      floor: 0,
+      buildingName: "X",
+      address: addr.body.data._id,
+    });
     expect(res.status).toBe(422);
   });
 

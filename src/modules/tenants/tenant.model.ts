@@ -53,6 +53,8 @@ export interface TenantDoc {
   kycTokenExpires: Date | null;
   kycVerifiedAt: Date | null;
   kycClientId: string | null;
+  /** Provider that performed the verification ("mock" = simulated). */
+  kycProvider: "surepass" | "mock" | null;
   paymentPattern: PaymentPattern;
   lastPaidPeriod: number | null;
   dateOfRenting: Date;
@@ -99,6 +101,11 @@ const TenantSchema = new Schema<TenantDoc>(
     kycTokenExpires: { type: Date, default: null },
     kycVerifiedAt: { type: Date, default: null },
     kycClientId: { type: String, default: null },
+    kycProvider: {
+      type: String,
+      enum: ["surepass", "mock", null],
+      default: null,
+    },
     paymentPattern: { type: String, enum: PAYMENT_PATTERNS, default: "NEW" },
     lastPaidPeriod: { type: Number, default: null },
     dateOfRenting: { type: Date, default: Date.now },

@@ -65,6 +65,14 @@ describe("Aadhaar e-KYC (public link flow)", () => {
       .get(`/api/tenants/${tenant._id}/kyc-link`)
       .set(owner.auth);
     expect(link.body.data.kycStatus).toBe("VERIFIED");
+
+    // The test environment uses the simulated provider: say so everywhere.
+    expect(info.body.data.simulated).toBe(true);
+    expect(submit.body.data.simulated).toBe(true);
+    const detail = await api()
+      .get(`/api/tenants/${tenant._id}`)
+      .set(owner.auth);
+    expect(detail.body.data.kycSimulated).toBe(true);
   });
 
   it("requires an OTP request from the same link before submission", async () => {
